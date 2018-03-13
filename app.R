@@ -157,24 +157,42 @@ server <- (function(input, output, session) {
 		} else if (input$model==modelOptions[4]) {
 
 		  list(numericInput('age', 'Please select age', 55, min=40, max=90),
-
+		       
 		       selectInput('sex', 'Sex', c('male', 'female')),
-
+		       
 		       numericInput('weight', 'Weight (kg)', 75, min=40, max=120),
-
+		       
 		       numericInput('height', 'Height (m)', 1.7, min=1.2, max=2),
-
-		       selectInput('smoking', 'Smoking status', c('Smoker', 'Sustained quitter')),
-
-		       numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
-
-		       numericInput('oco', "O'Connor", -12.70, min=-300.00, max=2.00),
-
-		       numericInput('fev1_prev', 'FEV1 at previous year (L)', 2.8, min=1.25, max=3.55),
-
-		       tags$div(title=interventionTitle,
-		                numericInput('int_effect', 'Effect of Intervention on Lung Function (L)', 0, min=0, max=0.1)),
-		       selectInput('tio', 'Is the patient being treated with tiotropium?', c('No', 'Yes')))
+		       
+		       numericInput('packyears', 'Cumulative smoke pack-year', '', min=0, max=0),
+		       
+		       numericInput('triglycerides', 'Triglycerides (mg/dl)', '', min=0, max=0),
+		       
+		       numericInput('hematocrit', 'Hematocrit (%)', '', min=0, max=0),
+		       
+		       numericInput('albumin', 'Albumin (mg/L)', '', min=0, max=0),
+		       
+		       numericInput('Globulin', 'Globulin (g/L)', '', min=0, max=0),
+		       
+		       numericInput('AlkalinePhosphotase', 'Alkaline Phosphotase (units)', '', min=0, max=0),
+		       
+		       numericInput('wbc', 'White blood cell count (10^9/L)', '', min=0, max=0),
+		       
+		       numericInput('qrs', 'QRS interval (hundredth of second)', '', min=0, max=0),
+		       
+		       numericInput('alcohol', 'Alcohol index (ozs/wk)', '', min=0, max=0),
+		       
+		       numericInput('wine', 'Wine intake (glasses/wk)', '', min=0, max=0),
+		       
+		       numericInput('cocktail', 'Cocktail Intake (drinks/wk)', '', min=0, max=0),
+		       
+		       numericInput('alcohol', 'Alcohol index (ozs/wk)', '', min=0, max=0),
+		       
+		       selectInput('bronchodilator', 'Bronchodilator Use?', c('current user', 'former user', 'no use')),
+		       
+		       selectInput('dyspnea', 'Dyspnea on exertion', c('On rigorous exercise', 'On moderate exercise', 'On slight exertion', 'no dyspnea')),
+		       
+		       selectInput('nocturnal', 'Nocturnal symptoms', c('Yes', 'Maybe', 'No')))
 
 		}
 
