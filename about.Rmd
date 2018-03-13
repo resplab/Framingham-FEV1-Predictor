@@ -1,0 +1,10 @@
+---
+output: html_document
+---
+
+#### About 
+
+This web application is built for the individualized prediction of lung function decline based in healthy individuals. 
+
+#### Credits
+
