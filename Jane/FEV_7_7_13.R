@@ -138,53 +138,52 @@ server <- function(input, output, session) {
   #moved here to make it constanly recalculate binary code. Amin
  
   file_name <-  reactive(
-                            file_name <- paste(
-                            as.integer(!is.na(input$fev1_0)),
-                            as.integer(!is.na(input$age)),
-                            as.integer(!is.na(input$trig)),
-                            as.integer(!is.na(input$hema)),
-                            as.integer(!is.na(input$alb)),
-                            as.integer(!is.na(input$glob)),
-                            as.integer(!is.na(input$alk_phos)),
-                            as.integer(!is.na(input$white_bc)),
-                            as.integer(!is.na(input$qrs)),
-                            as.integer(!is.na(input$beer)), #again, alcohol index is a derived variable (see prediction)
-                            as.integer(!is.na(input$wine)),
-                            as.integer(!is.na(input$cocktail)),
-                            as.integer(!is.na(input$height)),
-                            as.integer(!is.na(input$smoke_year)), #cum_smoke is a derived variable (see prediction)
-                            as.integer(!is.na(input$daily_cigs)),
-                            as.integer(input$sex != ''),
-                            as.integer(input$ba_use != ''),
-                            as.integer(input$dys_exer != ''),
-                            as.integer(input$noc_s != '')
-    ))
+                            # file_name <- paste(
+                            # as.integer(!is.na(input$fev1_0)),
+                            # as.integer(!is.na(input$age)),
+                            # as.integer(!is.na(input$trig)),
+                            # as.integer(!is.na(input$hema)),
+                            # as.integer(!is.na(input$alb)),
+                            # as.integer(!is.na(input$glob)),
+                            # as.integer(!is.na(input$alk_phos)),
+                            # as.integer(!is.na(input$white_bc)),
+                            # as.integer(!is.na(input$qrs)),
+                            # as.integer(!is.na(input$beer)), #again, alcohol index is a derived variable (see prediction)
+                            # as.integer(!is.na(input$wine)),
+                            # as.integer(!is.na(input$cocktail)),
+                            # as.integer(!is.na(input$height)),
+                            # as.integer(!is.na(input$smoke_year)), #cum_smoke is a derived variable (see prediction)
+                            # as.integer(!is.na(input$daily_cigs)),
+                            # as.integer(input$sex != ''),
+                            # as.integer(input$ba_use != ''),
+                            # as.integer(input$dys_exer != ''),
+                            # as.integer(input$noc_s != ''))
+    
+                  file_name <- BINARY_CODE_FROM_INPUTS(input$fev1_0,
+                              input$age,
+                              input$trig,
+                              input$hema,
+                              input$alb,
+                              input$glob,
+                              input$alk_phos,
+                              input$white_bc,
+                              input$qrs,
+                              input$beer, #again, alcohol index is a derived variable (see prediction)
+                              input$wine,
+                              input$cocktail,
+                              input$height,
+                              input$smoke_year, #cum_smoke is a derived variable (see prediction)
+                              input$daily_cigs,
+                              input$sex,
+                              input$ba_use,
+                              input$dys_exer,
+                              input$noc_s)
+    )
 
   output$binary <- renderText({ 
     file_name()
   })  
-  # output$binary <- renderText({ 
-  #   paste(
-  #                             as.integer(!is.na(input$age)),
-  #                             as.integer(!is.na(input$trig)),
-  #                             as.integer(!is.na(input$hema)),
-  #                             as.integer(!is.na(input$alb)),
-  #                             as.integer(!is.na(input$glob)),
-  #                             as.integer(!is.na(input$alk_phos)),
-  #                             as.integer(!is.na(input$white_bc)),
-  #                             as.integer(!is.na(input$qrs)),
-  #                             as.integer(!is.na(input$beer)), #again, alcohol index is a derived variable (see prediction)
-  #                             as.integer(!is.na(input$wine)),
-  #                             as.integer(!is.na(input$cocktail)),
-  #                             as.integer(!is.na(input$height)),
-  #                             as.integer(!is.na(input$smoke_year)), #cum_smoke is a derived variable (see prediction)
-  #                             as.integer(!is.na(input$daily_cigs)),
-  #                             as.integer(!is.na(input$sex)),
-  #                             as.integer(!is.na(input$ba_use)),
-  #                             as.integer(!is.na(input$dys_exer)),
-  #                             as.integer(!is.na(input$noc_s))
-  #     )
-  # })
+
   
   #Browse button - prompts user to select input values file and loads it into GUI
   observeEvent(input$load_inputs_button,{
