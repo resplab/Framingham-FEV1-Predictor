@@ -268,11 +268,8 @@ server <- function(input, output, session) {
   
 
   #make lmer summary non-reactive --> it is only calculated when the user presses "Run Linear mixed-effects models" button
-    output$lmer_summary <- renderPrint({
-      
-      # Take a dependency on input$lmer_Submit_button
-      if (input$lmer_Submit_button == 0) #important to include because otherwise executes the rest of code even though user has not yet pressed the button
-         return()
+     observeEvent(input$lmer_Submit_button, {
+
 
       # Create a Progress object
       progress <- shiny::Progress$new()
@@ -296,31 +293,31 @@ server <- function(input, output, session) {
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
 
         if(input$lmer_summary_DropDownBox == 'Entire Summary'){
-          GLOBAL_lmer_model_summary
+          output$lmer_summary <- renderText({ GLOBAL_lmer_model_summary })
         }
         else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-          coef(GLOBAL_lmer_model_summary)
+          output$lmer_summary <- coef(GLOBAL_lmer_model_summary)
         }
         else if(input$lmer_summary_DropDownBox == 'Residuals'){
-          resid(GLOBAL_lmer_model_summary)
+          output$lmer_summary <- resid(GLOBAL_lmer_model_summary)
         }
         else if(input$lmer_summary_DropDownBox == 'Formula'){
-          formula(GLOBAL_lmer_model_summary)
+          output$lmer_summary <- formula(GLOBAL_lmer_model_summary)
         }
       }
       #if file exists and model has been loaded, then get the model from GLOBAL variable
       else if(file.exists(full_file_name) && !is.null(GLOBAL_lmer_model_loaded_FLAG)){
         if(input$lmer_summary_DropDownBox == 'Entire Summary'){
-          GLOBAL_lmer_model_summary
+          output$lmer_summary <- GLOBAL_lmer_model_summary
         }
         else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-          coef(GLOBAL_lmer_model_summary)
+          output$lmer_summary <- coef(GLOBAL_lmer_model_summary)
         }
         else if(input$lmer_summary_DropDownBox == 'Residuals'){
-          resid(GLOBAL_lmer_model_summary)
+          output$lmer_summary <- resid(GLOBAL_lmer_model_summary)
         }
         else if(input$lmer_summary_DropDownBox == 'Formula'){
-          formula(GLOBAL_lmer_model_summary)
+          output$lmer_summary <- formula(GLOBAL_lmer_model_summary)
         }
       }
       #if file does not exist, then calculate lmer model and create file
@@ -372,19 +369,20 @@ server <- function(input, output, session) {
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
 
         if(input$lmer_summary_DropDownBox == 'Entire Summary'){
-          GLOBAL_lmer_model_summary
+          output$lmer_summary <- GLOBAL_lmer_model_summary
         }
         else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-          coef(GLOBAL_lmer_model_summary)
+          output$lmer_summary <- coef(GLOBAL_lmer_model_summary)
         }
         else if(input$lmer_summary_DropDownBox == 'Residuals'){
-          resid(GLOBAL_lmer_model_summary)
+          output$lmer_summary <- resid(GLOBAL_lmer_model_summary)
         }
         else if(input$lmer_summary_DropDownBox == 'Formula'){
-          formula(GLOBAL_lmer_model_summary)
+          output$lmer_summary <- formula(GLOBAL_lmer_model_summary)
         }
       }
-    }) #end of output$lmer_summary <- renderPrint
+    }) 
+
 
 
 
