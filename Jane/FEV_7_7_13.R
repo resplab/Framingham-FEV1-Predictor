@@ -293,31 +293,31 @@ server <- function(input, output, session) {
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
 
         if(input$lmer_summary_DropDownBox == 'Entire Summary'){
-          output$lmer_summary <- renderText({ GLOBAL_lmer_model_summary })
+          output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
         }
         else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-          output$lmer_summary <- renderText({ coef(GLOBAL_lmer_model_summary) })
+          output$lmer_summary <- renderPrint({ coef(GLOBAL_lmer_model_summary) })
         }
         else if(input$lmer_summary_DropDownBox == 'Residuals'){
-          output$lmer_summary <- renderText({ resid(GLOBAL_lmer_model_summary) })
+          output$lmer_summary <- renderPrint({ resid(GLOBAL_lmer_model_summary) })
         }
         else if(input$lmer_summary_DropDownBox == 'Formula'){
-          output$lmer_summary <- renderText({ formula(GLOBAL_lmer_model_summary)})
+          output$lmer_summary <- renderPrint({ formula(GLOBAL_lmer_model_summary)})
         }
       }
       #if file exists and model has been loaded, then get the model from GLOBAL variable
       else if(file.exists(full_file_name) && !is.null(GLOBAL_lmer_model_loaded_FLAG)){
         if(input$lmer_summary_DropDownBox == 'Entire Summary'){
-          output$lmer_summary <- renderText({GLOBAL_lmer_model_summary})
+          output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
         }
         else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-          output$lmer_summary <- renderText({coef(GLOBAL_lmer_model_summary)})
+          output$lmer_summary <- renderPrint({coef(GLOBAL_lmer_model_summary)})
         }
         else if(input$lmer_summary_DropDownBox == 'Residuals'){
-          output$lmer_summary <- renderText({resid(GLOBAL_lmer_model_summary)})
+          output$lmer_summary <- renderPrint({resid(GLOBAL_lmer_model_summary)})
         }
         else if(input$lmer_summary_DropDownBox == 'Formula'){
-          output$lmer_summary <- renderText({formula(GLOBAL_lmer_model_summary)})
+          output$lmer_summary <- renderPrint({formula(GLOBAL_lmer_model_summary)})
         }
       }
       #if file does not exist, then calculate lmer model and create file
@@ -369,16 +369,16 @@ server <- function(input, output, session) {
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
 
         if(input$lmer_summary_DropDownBox == 'Entire Summary'){
-          output$lmer_summary <- renderText({GLOBAL_lmer_model_summary})
+          output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
         }
         else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-          output$lmer_summary <- renderText({coef(GLOBAL_lmer_model_summary)})
+          output$lmer_summary <- renderPrint({coef(GLOBAL_lmer_model_summary)})
         }
         else if(input$lmer_summary_DropDownBox == 'Residuals'){
-          output$lmer_summary <- renderText({resid(GLOBAL_lmer_model_summary)})
+          output$lmer_summary <- renderPrint({resid(GLOBAL_lmer_model_summary)})
         }
         else if(input$lmer_summary_DropDownBox == 'Formula'){
-          output$lmer_summary <- renderText({formula(GLOBAL_lmer_model_summary)})
+          output$lmer_summary <- renderPrint({formula(GLOBAL_lmer_model_summary)})
         }
       }
     }) 
