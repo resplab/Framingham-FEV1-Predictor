@@ -77,10 +77,10 @@ BINARY_CODE_FROM_INPUTS <- function(
   if(is.na(height))   {height = 0} else {height = 1}
   if(is.na(smoke_year)) {smoke_year = 0} else {smoke_year = 1}
   if(is.na(daily_cigs)) {daily_cigs = 0} else {daily_cigs = 1}
-  if(sex == 'Not Selected') {sex = 0} else {sex = 1}
-  if(ba_use == 'Not Selected') {ba_use = 0} else {ba_use = 1}
-  if(dys_exer == 'Not Selected') {dys_exer = 0} else {dys_exer = 1}
-  if(noc_s == 'Not Selected') {noc_s = 0} else {noc_s = 1}
+  if(sex == '') {sex = 0} else {sex = 1}
+  if(ba_use == '') {ba_use = 0} else {ba_use = 1}
+  if(dys_exer == '') {dys_exer = 0} else {dys_exer = 1}
+  if(noc_s == '') {noc_s = 0} else {noc_s = 1}
   bc <- c(fev1_0,
           age,
           # follow_up_baseline,
