@@ -3,4 +3,5 @@
 .RData
 .Ruserdata
 *.csv
+*.rds
 analysis4.rdata
