@@ -489,17 +489,35 @@ server <- function(input, output, session) {
         title = "FEV1 (mL)",
         titlefont = f
       )
-      plot_ly(prediction_results_toPlot, x = ~year) %>%
-        #add_markers(y = ~pred3) %>%
-        add_lines(y= ~pred3, name = "FEV1 decline") %>%
-        # add_markers(y = ~lower3) %>%
-        # add_lines(y= ~lower3) %>%
-        # add_markers(y = ~upper3) %>%
-        # add_lines(y= ~upper3) %>%
-        add_ribbons(x = ~year, ymin = prediction_results_toPlot$lower3, ymax = prediction_results_toPlot$upper3,      #responsible for 95% CI
-                    color = I("red"), name = "95% confidence") %>%
-        layout(title = "Individualized Prediction of Adulthood Lung Function Decline", xaxis = x, yaxis = y)
+      
+      # Graphics can be coded either using plot_ly or ggplot
+      
+      #plot_ly code
+      
+      # plot_ly(prediction_results_toPlot, x = ~year) %>%
+      #   add_lines(y= ~pred3, name = "FEV1 decline") %>%
+      #   
+      #   add_ribbons(x = ~year, ymin = prediction_results_toPlot$lower3, ymax = prediction_results_toPlot$upper3,      #responsible for 95% CI
+      #               color = I("red"), name = "95% confidence") %>%
+      #   layout(title = "Individualized Prediction of Adulthood Lung Function Decline", xaxis = x, yaxis = y)
 
+      #ggolot code
+      
+      coverageInterval <- "95% coverage interval"
+      xlab="Time (years)"
+      ylab="FEV1 (L)"
+      errorLineColor <- "darkcyan"
+      buttonremove <- list("sendDataToCloud", "lasso2d", "pan2d" , "zoom2d", "hoverClosestCartesian")
+      
+      p <- ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
+                      geom_ribbon(aes(ymin=lower3, ymax=upper3), linetype=2, alpha=0.1) +
+                      geom_line(aes(y = lower3), color=errorLineColor, linetype=2) +
+                      geom_line(aes(y = upper3), color=errorLineColor, linetype=2) +
+                      annotate("text", 1, 3.52, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
+                      annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+                      labs(x=xlab, y=ylab) +
+                      theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+      print(p)
 
         ################END OF PLOTLY CODE########################
 
