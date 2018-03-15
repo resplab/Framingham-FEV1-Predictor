@@ -46,26 +46,26 @@ ui <- fluidPage(
       fluidRow(
         column(12,
                fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("age","Age (year)", value = 60,min = 30,max = 90,step = 1,width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("fev1_0","FEV1 at baseline (L) custom",value = NULL,min = 0,max = 250,step = 1,width = button_width)))),
+                 column(5,div(style = "font-size: 12px;",numericInput("age","Age (year)", value = 36,min = 20,max = 62,step = 1,width = button_width))),
+                 column(5,div(style = "font-size: 12px;",numericInput("fev1_0","FEV1 at baseline (L) custom", value = NULL, min = 0, max = 250, step = 1, width = button_width)))),
                fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("trig","Triglycerides (mg/dl)",value = NULL,step = 0.01,width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("hema","Hematocrit (%)",value = NULL,min = 0,max = 100,step = 0.01,width = button_width)))),
+                 column(5,div(style = "font-size: 12px;",numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01,width = button_width))),
+                 column(5,div(style = "font-size: 12px;",numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1,width = button_width)))),
                fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("alb","Albumin (mg/L)",value = NULL,step = 0.01,width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("glob","Globulin (g/L)",value = NULL,step = 0.01,width = button_width)))),
+                 column(5,div(style = "font-size: 12px;",numericInput("alb","Albumin (mg/L)",value = NULL, min = 24, max = 59, step = 1, width = button_width))),
+                 column(5,div(style = "font-size: 12px;",numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1, width = button_width)))),
                fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("alk_phos","Alkaline Phosphotase",value = NULL,step = 0.01,width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("white_bc","White blood cells(10^9/L)",value = NULL,step = 0.01,width = button_width)))),
+                 column(5,div(style = "font-size: 12px;",numericInput("alk_phos","Alkaline Phosphotase",value = NULL, min = 16, max = 98, step = 1, width = button_width))),
+                 column(5,div(style = "font-size: 12px;",numericInput("white_bc","White blood cells(10^9/L)",value = NULL, min = 25, max = 172, step = 0.01,width = button_width)))),
                fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("qrs","QRS interval (0.01 sec)",value = NULL,step = 0.01,width = button_width))),
+                 column(5,div(style = "font-size: 12px;",numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1, width = button_width))),
                  column(5,div(style = "font-size: 12px;",numericInput("beer","beer intake (cans or bottles/wk)",value = NULL,step = 1,width = button_width)))),
                fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("wine","Wine intake (glasses/wk)",value = NULL,min = 0,step = 1,width = button_width))),
+                 column(5,div(style = "font-size: 12px;",numericInput("wine","Wine intake (glasses/wk)", value = NULL,min = 0,step = 1,width = button_width))),
                  column(5,div(style = "font-size: 12px;",numericInput("cocktail","Cocktail intake (drinks/wk)",value = NULL,min = 0,step = 1,width = button_width)))),
                fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("height","Height (cm)",value = NULL,min = 55,step = 1,width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("smoke_year","Years smoking",value = NULL,min = 0,step = 1,width = button_width)))),
+                 column(5,div(style = "font-size: 12px;",numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1, width = button_width))),
+                 column(5,div(style = "font-size: 12px;",numericInput("smoke_year","Years smoking",value = NULL,min = 0, max = 50, step = 1,width = button_width)))),
                fluidRow(
                  column(5,div(style = "font-size: 12px;",numericInput("daily_cigs","cig. per day",value = NULL,min = 0,step = 1,width = button_width)))),
                fluidRow(
