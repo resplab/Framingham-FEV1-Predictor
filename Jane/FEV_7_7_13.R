@@ -46,7 +46,7 @@ ui <- fluidPage(
       fluidRow(
         column(12,
                fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("age","Age (year)",value = NULL,min = 0,max = 250,step = 1,width = button_width))),
+                 column(5,div(style = "font-size: 12px;",numericInput("age","Age (year)", value = 60,min = 30,max = 90,step = 1,width = button_width))),
                  column(5,div(style = "font-size: 12px;",numericInput("fev1_0","FEV1 at baseline (L) custom",value = NULL,min = 0,max = 250,step = 1,width = button_width)))),
                fluidRow(
                  column(5,div(style = "font-size: 12px;",numericInput("trig","Triglycerides (mg/dl)",value = NULL,step = 0.01,width = button_width))),
@@ -456,8 +456,10 @@ server <- function(input, output, session) {
 
       prediction_results <- make_predictions(GLOBAL_lmer_model, predictors)
       
+      
+      
       #Next line: save output for unit test(comment out next line under normal operation)
-      # write.csv(prediction_results,file="~/RStudio projects/20171229/FEV_make_predictions_output.CSV")
+       write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
 
       #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
       prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 0)

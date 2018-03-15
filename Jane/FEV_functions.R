@@ -330,6 +330,8 @@ make_predictions <- function(lmfin, predictors) {
 
   # Prediction;
   pred<-lme4:::predict.merMod(object=lmfin,newdata=data_pred,re.form=NA, allow.new.levels=TRUE) #JK:predict is a generic function for predictions from the results of various model fitting functions.
+ 
+  
   #Note!!!: I wonder if you could rename these data variables to in line with the data_rf4's variable names, otherwise it will not work
   data_pred2<-cbind(data_pred,pred)
 
@@ -364,11 +366,12 @@ make_predictions <- function(lmfin, predictors) {
   data_pred_fin <- as.data.frame(data_pred_fin)
   colnames(data_pred_fin)<-c("year","SmokeStatus","cpackyr","fev1_0","pred3","se3","upper3","lower3")
   # Note: We used baseline FEV1 to predict future FEV1, so baseline FEV1 should be set to original value, se should be 0
-  data_pred_fin$pred3[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]
+  data_pred_fin$pred3[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]*0.794445308+2.979447188 #backtransformed
   data_pred_fin$se3[data_pred_fin$year==0]<-0
   data_pred_fin$lower3[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
   data_pred_fin$upper3[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
-
+  
+  #return(data_pred) #debug Amin. TODO
   return(data_pred_fin)
 }
 
