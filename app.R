@@ -165,7 +165,7 @@ server <- function(input, output, session) {
       list(numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
            numericInput("white_bc","White blood cells(10^9/L)", value = NULL, min = 25, max = 172, step = 0.01),
            numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01),
-           numericInput("alb","Albumin (mg/L)",value = NULL, min = 24, max = 59, step = 1),
+           numericInput("alb","Albumin (g/L)",value = NULL, min = 24, max = 59, step = 1),
            numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1),
            numericInput("alk_phos","Alkaline Phosphotase",value = NULL, min = 16, max = 98, step = 1),
            actionButton("prev_input_cat", "Back"),
