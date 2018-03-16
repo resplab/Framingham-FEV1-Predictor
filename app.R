@@ -42,10 +42,43 @@ ui <- fluidPage(
 
 
     sidebarPanel(
-      
-      selectInput('category', 'Input Category:', c("baseline information", "Risk Factors",
-                                                         "Symptoms & Treatments",
-                                                         "Blood Test")),
+      tabsetPanel(
+        tabPanel("1", numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
+                 numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
+                 selectInput("sex","Gender",list('','female', 'male'),selected = ''),
+                 numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
+                 #actionButton("prev_input_cat", "Back"),
+                 actionButton("next_input_cat", "Forward")), 
+        tabPanel("2", numericInput("daily_cigs","cig. per day", value = NULL, min = 0, step = 1),
+                                 numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
+                                 numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
+                                 numericInput("beer","beer intake (cans or bottles/wk)", value = NULL, step = 1),
+                                 numericInput("wine","Wine intake (glasses/wk)", value = NULL,min = 0,step = 1),
+                                 numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1),
+                                 actionButton("prev_input_cat", "Back"),
+                                 actionButton("next_input_cat", "Forward")), 
+        tabPanel("3", selectInput("ba_use", "Bronchodilator or aerosol", list('','Current use', 'Former use', 'No use'), selected = ''),
+                 selectInput("dys_exer", "Dyspnea on exertion", list('','On rigorous exercise','On moderate exercise','On slight exertion','No dyspnea on ex.'), selected = ''),
+                 selectInput("ba_use","Bronchodilator or aerosol", list('','Current use', 'Former use', 'No use'), selected = ''),
+                 actionButton("prev_input_cat", "Back"),
+                 actionButton("next_input_cat", "Forward")),
+        tabPanel("4", numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
+                 numericInput("white_bc","White blood cells(10^9/L)", value = NULL, min = 25, max = 172, step = 0.01),
+                 numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01),
+                 numericInput("alb","Albumin (g/L)",value = NULL, min = 24, max = 59, step = 1),
+                 numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1),
+                 numericInput("alk_phos","Alkaline Phosphotase",value = NULL, min = 16, max = 98, step = 1),
+                 actionButton("prev_input_cat", "Back"),
+                 #actionButton("next_input_cat", "Forward")
+                 
+                 downloadButton("save_inputs_button", "Save Inputs"),
+                 fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs..."),
+                 actionButton("lmer_Submit_button", "Run Linear mixed-effects models"),
+                 actionButton("clear_inputs_button", "Clear Inputs"),
+                 actionButton("plot_FEV1_button", "Plot FEV1 decline"))
+        
+      ),
+
       
       uiOutput('inputParam'),
       
@@ -125,61 +158,6 @@ server <- function(input, output, session) {
   
   output$inputParam<-renderUI({
     
-    if (input$category==inputOption[1]) {
-      
-      list(numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
-          numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
-          selectInput("sex","Gender",list('','female', 'male'),selected = ''),
-          numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
-          #actionButton("prev_input_cat", "Back"),
-          actionButton("next_input_cat", "Forward")
-          )
-           
-
-      
-    } else if (input$category==inputOption[2]){
-      
-      list(numericInput("daily_cigs","cig. per day", value = NULL, min = 0, step = 1),
-           numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
-           numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
-           numericInput("beer","beer intake (cans or bottles/wk)", value = NULL, step = 1),
-           numericInput("wine","Wine intake (glasses/wk)", value = NULL,min = 0,step = 1),
-           numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1),
-           actionButton("prev_input_cat", "Back"),
-           actionButton("next_input_cat", "Forward")
-           
-      )
-      
-    } else if (input$category==inputOption[3]) {
-      
-      list(selectInput("ba_use", "Bronchodilator or aerosol", list('','Current use', 'Former use', 'No use'), selected = ''),
-           selectInput("dys_exer", "Dyspnea on exertion", list('','On rigorous exercise','On moderate exercise','On slight exertion','No dyspnea on ex.'), selected = ''),
-           selectInput("ba_use","Bronchodilator or aerosol", list('','Current use', 'Former use', 'No use'), selected = ''),
-           actionButton("prev_input_cat", "Back"),
-           actionButton("next_input_cat", "Forward")
-           
-           )
-      
-    } else if (input$category==inputOption[4]) {
-      
-      list(numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
-           numericInput("white_bc","White blood cells(10^9/L)", value = NULL, min = 25, max = 172, step = 0.01),
-           numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01),
-           numericInput("alb","Albumin (g/L)",value = NULL, min = 24, max = 59, step = 1),
-           numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1),
-           numericInput("alk_phos","Alkaline Phosphotase",value = NULL, min = 16, max = 98, step = 1),
-           actionButton("prev_input_cat", "Back"),
-           #actionButton("next_input_cat", "Forward")
-   
-           downloadButton("save_inputs_button", "Save Inputs"),
-           fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs..."),
-           actionButton("lmer_Submit_button", "Run Linear mixed-effects models"),
-           actionButton("clear_inputs_button", "Clear Inputs"),
-           actionButton("plot_FEV1_button", "Plot FEV1 decline")           
-        
-      )
-      
-    }
     
   })
   
