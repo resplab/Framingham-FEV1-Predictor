@@ -42,33 +42,33 @@ ui <- fluidPage(
 
 
     sidebarPanel(
-      tabsetPanel(
-        tabPanel("1", numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
+      tabsetPanel(id = "category",
+        tabPanel(title="1", value = "panel1", numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
                  numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
                  selectInput("sex","Gender",list('','female', 'male'),selected = ''),
                  numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
                  #actionButton("prev_input_cat", "Back"),
-                 actionButton("next_input_cat", "Forward")), 
-        tabPanel("2", numericInput("daily_cigs","cig. per day", value = NULL, min = 0, step = 1),
+                 actionButton("next_input_cat1", "Forward")), 
+        tabPanel(title="2", value = "panel2", numericInput("daily_cigs","cig. per day", value = NULL, min = 0, step = 1),
                                  numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
                                  numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
                                  numericInput("beer","beer intake (cans or bottles/wk)", value = NULL, step = 1),
                                  numericInput("wine","Wine intake (glasses/wk)", value = NULL,min = 0,step = 1),
                                  numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1),
-                                 actionButton("prev_input_cat", "Back"),
-                                 actionButton("next_input_cat", "Forward")), 
-        tabPanel("3", selectInput("ba_use", "Bronchodilator or aerosol", list('','Current use', 'Former use', 'No use'), selected = ''),
+                                 actionButton("prev_input_cat2", "Back"),
+                                 actionButton("next_input_cat2", "Forward")), 
+        tabPanel(title="3", value = "panel3", selectInput("ba_use", "Bronchodilator or aerosol", list('','Current use', 'Former use', 'No use'), selected = ''),
                  selectInput("dys_exer", "Dyspnea on exertion", list('','On rigorous exercise','On moderate exercise','On slight exertion','No dyspnea on ex.'), selected = ''),
-                 selectInput("ba_use","Bronchodilator or aerosol", list('','Current use', 'Former use', 'No use'), selected = ''),
-                 actionButton("prev_input_cat", "Back"),
-                 actionButton("next_input_cat", "Forward")),
-        tabPanel("4", numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
+                 selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'Maybe', 'No'),selected = ''),
+                 actionButton("prev_input_cat3", "Back"),
+                 actionButton("next_input_cat3", "Forward")),
+        tabPanel(title="4", value = "panel4", numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
                  numericInput("white_bc","White blood cells(10^9/L)", value = NULL, min = 25, max = 172, step = 0.01),
                  numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01),
                  numericInput("alb","Albumin (g/L)",value = NULL, min = 24, max = 59, step = 1),
                  numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1),
                  numericInput("alk_phos","Alkaline Phosphotase",value = NULL, min = 16, max = 98, step = 1),
-                 actionButton("prev_input_cat", "Back"),
+                 actionButton("prev_input_cat4", "Back"),
                  #actionButton("next_input_cat", "Forward")
                  
                  downloadButton("save_inputs_button", "Save Inputs"),
@@ -212,21 +212,32 @@ server <- function(input, output, session) {
     )
 
   output$binary <- renderText({ 
-    file_name()
+    file_name() 
+   # input$ba_use #for debug
   })  
 
-  observeEvent(input$prev_input_cat, {
-    if (input$category == inputOption[2]) updateSelectInput(session, "category", selected = inputOption[1])
-    if (input$category == inputOption[3]) updateSelectInput(session, "category", selected = inputOption[2])
-    if (input$category == inputOption[4]) updateSelectInput(session, "category", selected = inputOption[3])
-    
+  observeEvent(input$prev_input_cat2, {
+   updateTabsetPanel(session, "category", selected = "panel1")
+  })
+
+  observeEvent(input$prev_input_cat3, {
+    updateTabsetPanel(session, "category", selected = "panel2")
+  })  
+  
+  observeEvent(input$prev_input_cat4, {
+    updateTabsetPanel(session, "category", selected = "panel3")
   })
   
-  observeEvent(input$next_input_cat, {
-    if (input$category == inputOption[1]) updateSelectInput(session, "category", selected = inputOption[2])
-    if (input$category == inputOption[2]) updateSelectInput(session, "category", selected = inputOption[3])
-    if (input$category == inputOption[3]) updateSelectInput(session, "category", selected = inputOption[4])
-    
+  observeEvent(input$next_input_cat1, {
+    updateTabsetPanel(session, "category", selected = "panel2")
+  })
+  
+  observeEvent(input$next_input_cat2, {
+    updateTabsetPanel(session, "category", selected = "panel3")
+  })
+  
+  observeEvent(input$next_input_cat3, {
+    updateTabsetPanel(session, "category", selected = "panel4")
   })
     
   #Browse button - prompts user to select input values file and loads it into GUI
