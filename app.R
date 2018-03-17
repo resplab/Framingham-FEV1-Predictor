@@ -42,49 +42,51 @@ ui <- fluidPage(
 
 
     sidebarPanel(
-      # button_width <- 160,
-      fluidRow(
-        column(12,
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("age","Age (year)", value = 36,min = 20,max = 62,step = 1,width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("fev1_0","FEV1 at baseline (L) custom", value = NULL, min = 0, max = 250, step = 1, width = button_width)))),
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01,width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1,width = button_width)))),
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("alb","Albumin (mg/L)",value = NULL, min = 24, max = 59, step = 1, width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1, width = button_width)))),
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("alk_phos","Alkaline Phosphotase",value = NULL, min = 16, max = 98, step = 1, width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("white_bc","White blood cells(10^9/L)",value = NULL, min = 25, max = 172, step = 0.01,width = button_width)))),
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1, width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("beer","beer intake (cans or bottles/wk)",value = NULL,step = 1,width = button_width)))),
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("wine","Wine intake (glasses/wk)", value = NULL,min = 0,step = 1,width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("cocktail","Cocktail intake (drinks/wk)",value = NULL,min = 0,step = 1,width = button_width)))),
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1, width = button_width))),
-                 column(5,div(style = "font-size: 12px;",numericInput("smoke_year","Years smoking",value = NULL,min = 0, max = 50, step = 1,width = button_width)))),
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",numericInput("daily_cigs","cig. per day",value = NULL,min = 0,step = 1,width = button_width)))),
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",selectInput("sex","sex",list('','female', 'male'),selected = ''))),
-                 column(5,div(style = "font-size: 12px;",selectInput("ba_use","Bronchodilator or aerosol",list('','Current use', 'Former use', 'No use'),selected = '')))),
-               fluidRow(
-                 column(5,div(style = "font-size: 12px;",selectInput("dys_exer","Dyspnea on exertion",list('','On rigorous exercise','On moderate exercise','On slight exertion','No dyspnea on ex.'),selected = ''))),
-                 column(5,div(style = "font-size: 12px;",selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'Maybe', 'No'),selected = '')))),
-
-               #action buttons
-               fluidRow(column(5, div(style = "font-size: 12px;",downloadButton("save_inputs_button", "Save Inputs")))),
-               fluidRow(column(10,div(style = "font-size: 12px;",fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs...")))),
-               fluidRow(column(5, div(style = "font-size: 12px;",actionButton("lmer_Submit_button", "Run Linear mixed-effects models")))),
-               fluidRow(column(5, div(style = "font-size: 12px;",actionButton("clear_inputs_button", "Clear Inputs")))),
-               fluidRow(column(5, div(style = "font-size: 12px;",actionButton("plot_FEV1_button", "Plot FEV1 decline")))))
+      tabsetPanel(id = "category",
+        tabPanel(title=emo::ji("bust_in_silhouette"), value = "panel1", numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
+                 numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
+                 selectInput("sex","Gender",list('','female', 'male'),selected = ''),
+                 numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
+                 #actionButton("prev_input_cat", "Back"),
+                 actionButton("next_input_cat1", "Forward")), 
+        tabPanel(title=emo::ji("smoking"), value = "panel2", numericInput("daily_cigs","cig. per day", value = NULL, min = 0, step = 1),
+                                 numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
+                                 numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
+                                 numericInput("beer","beer intake (cans or bottles/wk)", value = NULL, step = 1),
+                                 numericInput("wine","Wine intake (glasses/wk)", value = NULL,min = 0,step = 1),
+                                 numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1),
+                                 actionButton("prev_input_cat2", "Back"),
+                                 actionButton("next_input_cat2", "Forward")), 
+        tabPanel(title=emo::ji("pill"), value = "panel3", selectInput("ba_use", "Bronchodilator or aerosol", list('','Current use', 'Former use', 'No use'), selected = ''),
+                 selectInput("dys_exer", "Dyspnea on exertion", list('','On rigorous exercise','On moderate exercise','On slight exertion','No dyspnea on ex.'), selected = ''),
+                 selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'Maybe', 'No'),selected = ''),
+                 actionButton("prev_input_cat3", "Back"),
+                 actionButton("next_input_cat3", "Forward")),
+        tabPanel(title=emo::ji("syringe"), value = "panel4", numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
+                 numericInput("white_bc","White blood cells(10^9/L)", value = NULL, min = 25, max = 172, step = 0.01),
+                 numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01),
+                 numericInput("alb","Albumin (g/L)",value = NULL, min = 24, max = 59, step = 1),
+                 numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1),
+                 numericInput("alk_phos","Alkaline Phosphotase",value = NULL, min = 16, max = 98, step = 1),
+                 actionButton("prev_input_cat4", "Back"),
+                 #actionButton("next_input_cat", "Forward")
+                 
+                 downloadButton("save_inputs_button", "Save Inputs"),
+                 fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs..."),
+                 actionButton("lmer_Submit_button", "Run Linear mixed-effects models"),
+                 actionButton("clear_inputs_button", "Clear Inputs"),
+                 actionButton("plot_FEV1_button", "Plot FEV1 decline"))
+        
       ),
-      width=4
-    )
-    ,
+
+      
+      uiOutput('inputParam'),
+      
+      br(),
+      br()
+      #submitButton("xx")
+    ),
+     
 
     mainPanel(
       tabsetPanel(type="tabs",
@@ -130,6 +132,35 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  
+
+  # Output Function Constants-------------------------------------------------------------------------------------------------
+  
+  coverageInterval <- "95% coverage interval"
+  xlab="Time (years)"
+  ylab="FEV1 (L)"
+  errorLineColor <- "darkcyan"
+  buttonremove <- list("sendDataToCloud", "lasso2d", "pan2d" , "zoom2d", "hoverClosestCartesian")
+  
+  interventionTitle <- paste0('If the patient is going to use a new intervention,\n',
+                              'please indicate the effect of the new intervention\n',
+                              'relative to his/her current therapy on initial\n',
+                              'improvement in lung function (L).\n',
+                              'If you only want to model the natural course of\n',
+                              'disease progression irrespective of specific intervention,\n',
+                              'please select 0 in here.')
+  inputOption <- c("baseline information", 
+                    "Risk Factors",
+                    "Symptoms & Treatments",
+                    "Blood Test")
+  
+  # Output Functions-----------------------------------------------------------------------------------------------------------
+  
+  output$inputParam<-renderUI({
+    
+    
+  })
+  
 
   output$markdown <- renderUI({
     HTML(markdown::markdownToHTML(knit('help_tab.Rmd', quiet = TRUE)))
@@ -181,10 +212,34 @@ server <- function(input, output, session) {
     )
 
   output$binary <- renderText({ 
-    file_name()
+    file_name() 
+   # input$ba_use #for debug
   })  
 
+  observeEvent(input$prev_input_cat2, {
+   updateTabsetPanel(session, "category", selected = "panel1")
+  })
+
+  observeEvent(input$prev_input_cat3, {
+    updateTabsetPanel(session, "category", selected = "panel2")
+  })  
   
+  observeEvent(input$prev_input_cat4, {
+    updateTabsetPanel(session, "category", selected = "panel3")
+  })
+  
+  observeEvent(input$next_input_cat1, {
+    updateTabsetPanel(session, "category", selected = "panel2")
+  })
+  
+  observeEvent(input$next_input_cat2, {
+    updateTabsetPanel(session, "category", selected = "panel3")
+  })
+  
+  observeEvent(input$next_input_cat3, {
+    updateTabsetPanel(session, "category", selected = "panel4")
+  })
+    
   #Browse button - prompts user to select input values file and loads it into GUI
   observeEvent(input$load_inputs_button,{
     inFile <- input$load_inputs_button
@@ -503,12 +558,7 @@ server <- function(input, output, session) {
 
       #ggolot code
       
-      coverageInterval <- "95% coverage interval"
-      xlab="Time (years)"
-      ylab="FEV1 (L)"
-      errorLineColor <- "darkcyan"
-      buttonremove <- list("sendDataToCloud", "lasso2d", "pan2d" , "zoom2d", "hoverClosestCartesian")
-      
+
       p <- ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
                       geom_ribbon(aes(ymin=lower3, ymax=upper3), linetype=2, alpha=0.1) +
                       geom_line(aes(y = lower3), color=errorLineColor, linetype=2) +
