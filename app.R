@@ -21,7 +21,7 @@ library(bookdown)
 library(knitr) #for bookdown file
 library(htmltools)
 
-#options(shiny.error = browser) #debug, amin
+options(shiny.error = browser) #debug, amin
 
 
 source('./FEV_functions.R')
