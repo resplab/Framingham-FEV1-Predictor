@@ -3,3 +3,7 @@
 .RData
 .Ruserdata
 analysis4.rdata
+*.rds
+*.csv
+2924Visit1
+save_inputs_button
