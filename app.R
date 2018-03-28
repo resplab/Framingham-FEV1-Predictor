@@ -90,24 +90,24 @@ ui <- fluidPage(
 
     mainPanel(
       tabsetPanel(type="tabs",
-                  tabPanel("Summary",
-                           selectInput(
-                             "lmer_summary_DropDownBox",
-                             "Model Summary Selection",
-                             list(
-                               'Entire Summary',
-                               'Coefficients',
-                               'Residuals',
-                               'Formula'),
-                             selected = 'Entire Summary'),
-                           verbatimTextOutput("lmer_summary")),
-                  tabPanel("Plots",
+                  tabPanel("Plot",
                            tags$p("Plot graph of linear regression:"),
                            plotlyOutput("plot_FEV1_decline")
                   ),
                   # tabPanel("Help",
                   #          uiOutput('markdown')
                   #                   ),
+                  tabPanel("Model Summary",
+                           # selectInput(
+                           #   "lmer_summary_DropDownBox",
+                           #   "Model Summary Selection",
+                           #   list(
+                           #     'Entire Summary',
+                           #     'Coefficients',
+                           #     'Residuals',
+                           #     'Formula'),
+                           #   selected = 'Entire Summary'),
+                           verbatimTextOutput("lmer_summary")),
                   tabPanel("Documentation",
                            # helpText(   a("Click Here to open FEV Documentation",href="file:///Users/sasha/Documents/RStudio projects1/26_12_2017/FEV_7_7_12/UserDocumentation/_book/index.html",target="_blank")
                            helpText(   a("Click Here to open FEV Documentation",href="file:///Users/sasha/Documents/RStudio projects1/26_12_2017/FEV_7_7_14/UserDocumentation/_book/index.html")
@@ -347,18 +347,18 @@ server <- function(input, output, session) {
         GLOBAL_lmer_model <<- lmer_function_output #could also be after lines 178-181
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
 
-        if(input$lmer_summary_DropDownBox == 'Entire Summary'){
+       # if(input$lmer_summary_DropDownBox == 'Entire Summary'){
           output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
-        }
-        else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-          output$lmer_summary <- renderPrint({ coef(GLOBAL_lmer_model_summary) })
-        }
-        else if(input$lmer_summary_DropDownBox == 'Residuals'){
-          output$lmer_summary <- renderPrint({ resid(GLOBAL_lmer_model_summary) })
-        }
-        else if(input$lmer_summary_DropDownBox == 'Formula'){
-          output$lmer_summary <- renderPrint({ formula(GLOBAL_lmer_model_summary)})
-        }
+        #}
+        # else if(input$lmer_summary_DropDownBox == 'Coefficients'){
+        #   output$lmer_summary <- renderPrint({ coef(GLOBAL_lmer_model_summary) })
+        # }
+        # else if(input$lmer_summary_DropDownBox == 'Residuals'){
+        #   output$lmer_summary <- renderPrint({ resid(GLOBAL_lmer_model_summary) })
+        # }
+        # else if(input$lmer_summary_DropDownBox == 'Formula'){
+        #   output$lmer_summary <- renderPrint({ formula(GLOBAL_lmer_model_summary)})
+        # }
       }
       #if file exists and model has been loaded, then get the model from GLOBAL variable
       else if(file.exists(full_file_name) && !is.null(GLOBAL_lmer_model_loaded_FLAG)){
