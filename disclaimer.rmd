@@ -1,0 +1,33 @@
+---
+title: "disclaimer"
+output: html_document
+---
+
+
+You assume all risks associated with use of the Product including, but not limited to any harm, injury or damages resulting directly or indirectly from the use of
+the Product, all such risks being known and understood by You. In consideration of your use of the Product, You, for yourself and anyone entitled to act on your
+behalf, waive and forever release UBC, its officers, trustees, employees, representatives and successors from all claims and liabilities of any kind arising out of
+your use or misuse of the Product.
+
+TO THE FULLEST EXTENT ALLOWED BY APPLICABLE LAW, UBC HEREBY DISCLAIMS, AND IN NO EVENT SHALL UBC OR ANY PARTY INVOLVED IN CREATING OR
+PRODUCING THE PRODUCT BE LIABLE FOR, ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES, INCLUDING WITHOUT
+LIMITATION, DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, DATA LOSS, OR OTHER LOSSES, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, EVEN IF UBC HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, RESULTING FROM: (i) THE USE OR INABILITY TO USE THE
+PRODUCT, (ii) THE COST OF ANY SUBSTITUTE PRODUCTS AND/OR SERVICES RESULTING FROM ANY PRODUCTS, DATA, INFORMATION OR SERVICES OBTAINED OR
+WHICH YOU WERE UNABLE TO OBTAIN OR TRANSACTIONS EFFECTED OR FAILED TO BE EFFECTED, (iii) THE USE OR INABILITY TO USE ANY THIRD PARTY
+APPLICATIONS CONTAINED WITHIN THE PRODUCT, OR (iv) ANY MATTER OTHERWISE RELATED TO YOUR USE OF THE PRODUCT.
+
+You assume all risks associated with use of the Product including, but not limited to any harm, injury or damages resulting directly or indirectly from the use of
+the Product, all such risks being known and understood by You. In consideration of your use of the Product, You, for yourself and anyone entitled to act on your
+behalf, waive and forever release UBC, its officers, trustees, employees, representatives and successors from all claims and liabilities of any kind arising out of
+your use or misuse of the Product.
+
+THE PRODUCT AND CONTENT ARE PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. UBC AND ITS SUPPLIERS EXPRESSLY DISCLAIM ALL WARRANTIES OF ANY
+KIND WITH RESPECT TO THE PRODUCT OR CONTENT, WHETHER EXPRESS OR IMPLIED, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. UBC MAKES NO WARRANTY THAT THE PRODUCT AND/OR ANY CONTENT THEREIN WILL MEET YOUR
+REQUIREMENTS, OR WILL BE UNINTERRUPTED, TIMELY, SECURE, CURRENT, ACCURATE, COMPLETE OR ERROR-FREE OR THE RESULTS THAT MAY BE OBTAINED BY
+USE OF THE PRODUCT OR ANY CONTENT THEREIN WILL BE ACCURATE OR RELIABLE. YOU UNDERSTAND AND ACKNOWLEDGE THAT YOUR SOLE AND EXCLUSIVE
+REMEDY WITH RESPECT TO ANY DEFECT IN OR DISSATISFACTION WITH THE PRODUCT IS TO CEASE ITS USE.
+The Content on the Product is presented as an educational service intended for licensed healthcare professionals. While the Content in the Product is about
+specific medical and healthcare issues, the Content is not a substitute for or replacement of personalized medical advice and is not intended to be used as the
+sole basis for making individualized medical or health-related decisions

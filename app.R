@@ -35,17 +35,15 @@ button_width <- 160
 ui <- fluidPage(
   theme = shinytheme("united"),
   tags$head(tags$script(src = "message-handler.js")),
-  titlePanel("Individualized Prediction of Adulthood Lung Function Decline"),
+  titlePanel("Individualized Framingham Lung Function Decline Predictor"),
 
   sidebarLayout(
-    # source('FEV_sidebarPanel.R')
-
 
     sidebarPanel(
       tabsetPanel(id = "category",
         tabPanel(title=paste(emo::ji("woman"), " ", emo::ji("man")), value = "panel1", helpText("Enter as many patient characteristics as possible.",
                                                                                                 "When all fields are completed, a validated model will make predictions.",
-                                                                                                "Fewer inputs will trigger the appropriate reduced model. See Documentation for more details."), numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
+                                                                                                "Fewer inputs will trigger the appropriate reduced model. See Resources for more details."), numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
                  numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
                  selectInput("sex","Gender",list('','female', 'male'),selected = ''),
                  numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
@@ -95,29 +93,13 @@ ui <- fluidPage(
                            tags$p("Predicted FEV1 with time:"),
                            plotlyOutput("plot_FEV1_decline")
                   ),
-                  # tabPanel("Help",
-                  #          uiOutput('markdown')
-                  #                   ),
+
                   tabPanel("Model Summary",
                            verbatimTextOutput("lmer_summary")),
-                  tabPanel("Documentation",
-                           # helpText(   a("Click Here to open FEV Documentation",href="file:///Users/sasha/Documents/RStudio projects1/26_12_2017/FEV_7_7_12/UserDocumentation/_book/index.html",target="_blank")
-                           helpText(   a("Click Here to open FEV Documentation",href="file:///Users/sasha/Documents/RStudio projects1/26_12_2017/FEV_7_7_14/UserDocumentation/_book/index.html")
-                           )
-                  ),
-                  # tabPanel("Resources",
-                  #          br(),
-                  #          fluidRow(
-                  #            column(6, "Resources for Clinician",
-                  #                   fluidRow(column(6, div(style = "font-size: 12px;",actionButton("article_1", "Article 1")))),
-                  #                   fluidRow(column(6, div(style = "font-size: 12px;",actionButton("article_2", "Article 2"))))
-                  #            ),
-                  #            column(6, "Resources for User")
-                  #          )
-                  #          ),
-                  tabPanel("Disclaimer", 
-                  textOutput("binary") #for debug; monitoring binary value. Amin
-                  )
+                  tabPanel("Resources",  includeMarkdown("resources.Rmd")),
+                  tabPanel("Disclaimer",  includeMarkdown("disclaimer.Rmd")),
+                  tabPanel("About",  includeMarkdown("about.Rmd"))
+                  #textOutput("binary") #for debug; monitoring binary value. Amin
       )
     )
   )
@@ -161,27 +143,6 @@ server <- function(input, output, session) {
   #moved here to make it constanly recalculate binary code. Amin
  
   file_name <-  reactive(
-                            # file_name <- paste(
-                            # as.integer(!is.na(input$fev1_0)),
-                            # as.integer(!is.na(input$age)),
-                            # as.integer(!is.na(input$trig)),
-                            # as.integer(!is.na(input$hema)),
-                            # as.integer(!is.na(input$alb)),
-                            # as.integer(!is.na(input$glob)),
-                            # as.integer(!is.na(input$alk_phos)),
-                            # as.integer(!is.na(input$white_bc)),
-                            # as.integer(!is.na(input$qrs)),
-                            # as.integer(!is.na(input$beer)), #again, alcohol index is a derived variable (see prediction)
-                            # as.integer(!is.na(input$wine)),
-                            # as.integer(!is.na(input$cocktail)),
-                            # as.integer(!is.na(input$height)),
-                            # as.integer(!is.na(input$smoke_year)), #cum_smoke is a derived variable (see prediction)
-                            # as.integer(!is.na(input$daily_cigs)),
-                            # as.integer(input$sex != ''),
-                            # as.integer(input$ba_use != ''),
-                            # as.integer(input$dys_exer != ''),
-                            # as.integer(input$noc_s != ''))
-    
                   file_name <- BINARY_CODE_FROM_INPUTS(input$fev1_0,
                               input$age,
                               input$trig,
@@ -308,10 +269,6 @@ server <- function(input, output, session) {
       write.csv(FEV_data_frame, file)
     }
   )
-
-  #FEV_na_inputs_check.R checks for every inputs if the value is na - NOTE: enable this when introducing reactive outputs
-  # source('FEV_na_inputs_check.R')
-
   
   FEV1_plot <- reactive ({
     #req(GLOBAL_lmer_model_loaded_FLAG)
@@ -368,9 +325,6 @@ server <- function(input, output, session) {
     # STEP2: remove 'beer' from the predictors dataframe
     predictors[,'beer'] <- NULL
     
-    #Next 2 lines: save inputs for unit test(comment out next 2 lines under normal operation)
-    # saveRDS(GLOBAL_lmer_model,"~/RStudio projects/20171229/FEV_make_predictions_input1_lmfin.RDS")
-    # write.csv(predictors,"~/RStudio projects/20171229/FEV_make_predictions_input2_predictors.CSV")
     
     prediction_results <- make_predictions(GLOBAL_lmer_model, predictors)
     
@@ -393,7 +347,6 @@ server <- function(input, output, session) {
     
     # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
     
-    ################PLOTLY CODE############################
     f <- list(
       family = "Courier New, monospace",
       size = 18,
@@ -408,19 +361,6 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    # Graphics can be coded either using plot_ly or ggplot
-    
-    #plot_ly code
-    
-    # plot_ly(prediction_results_toPlot, x = ~year) %>%
-    #   add_lines(y= ~pred3, name = "FEV1 decline") %>%
-    #   
-    #   add_ribbons(x = ~year, ymin = prediction_results_toPlot$lower3, ymax = prediction_results_toPlot$upper3,      #responsible for 95% CI
-    #               color = I("red"), name = "95% confidence") %>%
-    #   layout(title = "Individualized Prediction of Adulthood Lung Function Decline", xaxis = x, yaxis = y)
-    
-    #ggolot code
-    
     ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
                geom_ribbon(aes(ymin=lower3, ymax=upper3), linetype=2, alpha=0.1) +
                geom_line(aes(y = lower3), color=errorLineColor, linetype=2) +
@@ -429,10 +369,6 @@ server <- function(input, output, session) {
                annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y=ylab) +
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
-    
-   
-    ################END OF PLOTLY CODE########################
-    
   })
 
   
