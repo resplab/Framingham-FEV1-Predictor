@@ -43,7 +43,9 @@ ui <- fluidPage(
 
     sidebarPanel(
       tabsetPanel(id = "category",
-        tabPanel(title=paste(emo::ji("woman"), " ", emo::ji("man")), value = "panel1", numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
+        tabPanel(title=paste(emo::ji("woman"), " ", emo::ji("man")), value = "panel1", helpText("Enter as many patient characteristics as possible.",
+                                                                                                "When all fields are completed, a validated model will make predictions.",
+                                                                                                "Fewer inputs will trigger the appropriate reduced model. See Documentation for more details."), numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
                  numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
                  selectInput("sex","Gender",list('','female', 'male'),selected = ''),
                  numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
@@ -74,8 +76,7 @@ ui <- fluidPage(
                  downloadButton("save_inputs_button", "Save Inputs"),
                  fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs..."),
                  actionButton("lmer_Submit_button", "Run Linear mixed-effects models"),
-                 actionButton("clear_inputs_button", "Clear Inputs"),
-                 actionButton("plot_FEV1_button", "Plot FEV1 decline"))
+                 actionButton("clear_inputs_button", "Clear Inputs"))
         
       ),
 
@@ -91,22 +92,13 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(type="tabs",
                   tabPanel("Plot",
-                           tags$p("Plot graph of linear regression:"),
+                           tags$p("Predicted FEV1 with time:"),
                            plotlyOutput("plot_FEV1_decline")
                   ),
                   # tabPanel("Help",
                   #          uiOutput('markdown')
                   #                   ),
                   tabPanel("Model Summary",
-                           # selectInput(
-                           #   "lmer_summary_DropDownBox",
-                           #   "Model Summary Selection",
-                           #   list(
-                           #     'Entire Summary',
-                           #     'Coefficients',
-                           #     'Residuals',
-                           #     'Formula'),
-                           #   selected = 'Entire Summary'),
                            verbatimTextOutput("lmer_summary")),
                   tabPanel("Documentation",
                            # helpText(   a("Click Here to open FEV Documentation",href="file:///Users/sasha/Documents/RStudio projects1/26_12_2017/FEV_7_7_12/UserDocumentation/_book/index.html",target="_blank")
@@ -321,7 +313,130 @@ server <- function(input, output, session) {
   # source('FEV_na_inputs_check.R')
 
   
+  FEV1_plot <- reactive ({
+    #req(GLOBAL_lmer_model_loaded_FLAG)
+    
+    predictors_data_frame <- predictors <- isolate(
+      data.frame(
+        input$fev1_0,
+        input$age,
+        input$trig,
+        input$hema,
+        input$alb,
+        input$glob,
+        input$alk_phos,
+        input$white_bc,
+        input$qrs,
+        input$beer,
+        input$wine,
+        input$cocktail,
+        input$height,
+        input$smoke_year,
+        input$daily_cigs,
+        input$sex,
+        input$ba_use,
+        input$dys_exer,
+        input$noc_s
+      )
+    )
+    
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.fev1_0')] <- 'fev1_0'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.age')] <- 'age'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.trig')] <- 'triglycerides'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.hema')] <- 'hematocrit'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.alb')] <- 'albumin'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.glob')] <- 'globulin'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.alk_phos')] <- 'ALP'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.white_bc')] <- 'WBC'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.qrs')] <- 'QRS_intv'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.beer')] <- 'beer'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.wine')] <- 'wine'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.cocktail')] <- 'cocktail'
+    
+    # STEP1: create calculate alcohol_indx vector in the predictors dataframe and calculate it from 'beer', 'wine', 'cocktail'
+    predictors$alcohol_indx<-((predictors$beer*0.444+predictors$cocktail*0.570+predictors$wine*0.400)-3.681324783)/4.781456965
+    
+    
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.height')] <- 'height'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.smoke_year')] <- 'smoke_year'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.daily_cigs')] <- 'daily_cigs'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.sex')] <- 'sex'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.ba_use')] <- 'broncho'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.dys_exer')] <- 'dyspnea_exc'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.noc_s')] <- 'night_sym'
+    
+    # STEP2: remove 'beer' from the predictors dataframe
+    predictors[,'beer'] <- NULL
+    
+    #Next 2 lines: save inputs for unit test(comment out next 2 lines under normal operation)
+    # saveRDS(GLOBAL_lmer_model,"~/RStudio projects/20171229/FEV_make_predictions_input1_lmfin.RDS")
+    # write.csv(predictors,"~/RStudio projects/20171229/FEV_make_predictions_input2_predictors.CSV")
+    
+    prediction_results <- make_predictions(GLOBAL_lmer_model, predictors)
+    
+    
+    
+    #Next line: save output for unit test(comment out next line under normal operation)
+    write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
+    
+    #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
+    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 0)
+    
+    #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
+    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 1)
+    
+    #create prediction_results_toPlot dataframe
+    #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
+    #if either "smoke_year" or "daily_cigs" is not NA, then use prediction_results_ContinueSmoke
+    if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
+    if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
+    
+    # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
+    
+    ################PLOTLY CODE############################
+    f <- list(
+      family = "Courier New, monospace",
+      size = 18,
+      color = "#7f7f7f"
+    )
+    x <- list(
+      title = "Time (year)",
+      titlefont = f
+    )
+    y <- list(
+      title = "FEV1 (mL)",
+      titlefont = f
+    )
+    
+    # Graphics can be coded either using plot_ly or ggplot
+    
+    #plot_ly code
+    
+    # plot_ly(prediction_results_toPlot, x = ~year) %>%
+    #   add_lines(y= ~pred3, name = "FEV1 decline") %>%
+    #   
+    #   add_ribbons(x = ~year, ymin = prediction_results_toPlot$lower3, ymax = prediction_results_toPlot$upper3,      #responsible for 95% CI
+    #               color = I("red"), name = "95% confidence") %>%
+    #   layout(title = "Individualized Prediction of Adulthood Lung Function Decline", xaxis = x, yaxis = y)
+    
+    #ggolot code
+    
+    cat(file=stderr(), "hey", input$fev1_0, "\n")
+    ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
+               geom_ribbon(aes(ymin=lower3, ymax=upper3), linetype=2, alpha=0.1) +
+               geom_line(aes(y = lower3), color=errorLineColor, linetype=2) +
+               geom_line(aes(y = upper3), color=errorLineColor, linetype=2) +
+               annotate("text", 1, 3.52, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
+               annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+               labs(x=xlab, y=ylab) +
+               theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+    
+   
+    ################END OF PLOTLY CODE########################
+    
+  })
 
+  
   #make lmer summary non-reactive --> it is only calculated when the user presses "Run Linear mixed-effects models" button
      observeEvent(input$lmer_Submit_button, {
 
@@ -329,7 +444,6 @@ server <- function(input, output, session) {
       # Create a Progress object
       progress <- shiny::Progress$new()
       on.exit(progress$close())
-
 
 
       #use collapse="" to get rid of spaces between 1s and 0s; use sep="" to get rid of space betweeen file name and ".rds"
@@ -346,34 +460,12 @@ server <- function(input, output, session) {
 
         GLOBAL_lmer_model <<- lmer_function_output #could also be after lines 178-181
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
-
-       # if(input$lmer_summary_DropDownBox == 'Entire Summary'){
-          output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
-        #}
-        # else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-        #   output$lmer_summary <- renderPrint({ coef(GLOBAL_lmer_model_summary) })
-        # }
-        # else if(input$lmer_summary_DropDownBox == 'Residuals'){
-        #   output$lmer_summary <- renderPrint({ resid(GLOBAL_lmer_model_summary) })
-        # }
-        # else if(input$lmer_summary_DropDownBox == 'Formula'){
-        #   output$lmer_summary <- renderPrint({ formula(GLOBAL_lmer_model_summary)})
-        # }
+        output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
+        
       }
       #if file exists and model has been loaded, then get the model from GLOBAL variable
       else if(file.exists(full_file_name) && !is.null(GLOBAL_lmer_model_loaded_FLAG)){
-        if(input$lmer_summary_DropDownBox == 'Entire Summary'){
           output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
-        }
-        else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-          output$lmer_summary <- renderPrint({coef(GLOBAL_lmer_model_summary)})
-        }
-        else if(input$lmer_summary_DropDownBox == 'Residuals'){
-          output$lmer_summary <- renderPrint({resid(GLOBAL_lmer_model_summary)})
-        }
-        else if(input$lmer_summary_DropDownBox == 'Formula'){
-          output$lmer_summary <- renderPrint({formula(GLOBAL_lmer_model_summary)})
-        }
       }
       #if file does not exist, then calculate lmer model and create file
       else if(!file.exists(full_file_name)){
@@ -423,163 +515,15 @@ server <- function(input, output, session) {
         GLOBAL_lmer_model <<- lmer_function_output #most important has to be after line 214
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
 
-        if(input$lmer_summary_DropDownBox == 'Entire Summary'){
           output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
-        }
-        else if(input$lmer_summary_DropDownBox == 'Coefficients'){
-          output$lmer_summary <- renderPrint({coef(GLOBAL_lmer_model_summary)})
-        }
-        else if(input$lmer_summary_DropDownBox == 'Residuals'){
-          output$lmer_summary <- renderPrint({resid(GLOBAL_lmer_model_summary)})
-        }
-        else if(input$lmer_summary_DropDownBox == 'Formula'){
-          output$lmer_summary <- renderPrint({formula(GLOBAL_lmer_model_summary)})
-        }
+
       }
+       output$plot_FEV1_decline <- renderPlotly({
+         print (FEV1_plot())
+       })
     }) 
-
-
-
-
-
-    # output$plot_FEV1_decline <- renderPlot({
-    output$plot_FEV1_decline <- renderPlotly({
-      # Take a dependency on input$plot_FEV1_button
-      if (input$plot_FEV1_button == 0) #important to include because otherwise executes the rest of code even though user has not yet pressed the button
-        return()
-
-      # browser() #NOTE: browser() does not seem to work inside renderPlotyly()
-      # # Create a Progress object
-      # progress <- shiny::Progress$new()
-      # on.exit(progress$close())
-
-      predictors_data_frame <- predictors <- isolate(
-        data.frame(
-          input$fev1_0,
-          input$age,
-          input$trig,
-          input$hema,
-          input$alb,
-          input$glob,
-          input$alk_phos,
-          input$white_bc,
-          input$qrs,
-          input$beer,
-          input$wine,
-          input$cocktail,
-          input$height,
-          input$smoke_year,
-          input$daily_cigs,
-          input$sex,
-          input$ba_use,
-          input$dys_exer,
-          input$noc_s
-        )
-      )
-
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.fev1_0')] <- 'fev1_0'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.age')] <- 'age'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.trig')] <- 'triglycerides'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.hema')] <- 'hematocrit'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.alb')] <- 'albumin'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.glob')] <- 'globulin'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.alk_phos')] <- 'ALP'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.white_bc')] <- 'WBC'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.qrs')] <- 'QRS_intv'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.beer')] <- 'beer'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.wine')] <- 'wine'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.cocktail')] <- 'cocktail'
-
-      # STEP1: create calculate alcohol_indx vector in the predictors dataframe and calculate it from 'beer', 'wine', 'cocktail'
-      predictors$alcohol_indx<-((predictors$beer*0.444+predictors$cocktail*0.570+predictors$wine*0.400)-3.681324783)/4.781456965
-
-
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.height')] <- 'height'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.smoke_year')] <- 'smoke_year'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.daily_cigs')] <- 'daily_cigs'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.sex')] <- 'sex'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.ba_use')] <- 'broncho'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.dys_exer')] <- 'dyspnea_exc'
-      colnames(predictors)[which(colnames(predictors_data_frame) == 'input.noc_s')] <- 'night_sym'
-
-      # STEP2: remove 'beer' from the predictors dataframe
-      predictors[,'beer'] <- NULL
-      
-      #Next 2 lines: save inputs for unit test(comment out next 2 lines under normal operation)
-      # saveRDS(GLOBAL_lmer_model,"~/RStudio projects/20171229/FEV_make_predictions_input1_lmfin.RDS")
-      # write.csv(predictors,"~/RStudio projects/20171229/FEV_make_predictions_input2_predictors.CSV")
-
-      prediction_results <- make_predictions(GLOBAL_lmer_model, predictors)
-      
-      
-      
-      #Next line: save output for unit test(comment out next line under normal operation)
-       write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
-
-      #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
-      prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 0)
-      
-      #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
-      prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 1)
-      
-      #create prediction_results_toPlot dataframe
-      #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
-      #if either "smoke_year" or "daily_cigs" is not NA, then use prediction_results_ContinueSmoke
-      if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
-      if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
-      
-      # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
-      
-        ################PLOTLY CODE############################
-      f <- list(
-        family = "Courier New, monospace",
-        size = 18,
-        color = "#7f7f7f"
-      )
-      x <- list(
-        title = "Time (year)",
-        titlefont = f
-      )
-      y <- list(
-        title = "FEV1 (mL)",
-        titlefont = f
-      )
-      
-      # Graphics can be coded either using plot_ly or ggplot
-      
-      #plot_ly code
-      
-      # plot_ly(prediction_results_toPlot, x = ~year) %>%
-      #   add_lines(y= ~pred3, name = "FEV1 decline") %>%
-      #   
-      #   add_ribbons(x = ~year, ymin = prediction_results_toPlot$lower3, ymax = prediction_results_toPlot$upper3,      #responsible for 95% CI
-      #               color = I("red"), name = "95% confidence") %>%
-      #   layout(title = "Individualized Prediction of Adulthood Lung Function Decline", xaxis = x, yaxis = y)
-
-      #ggolot code
-      
-
-      p <- ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
-                      geom_ribbon(aes(ymin=lower3, ymax=upper3), linetype=2, alpha=0.1) +
-                      geom_line(aes(y = lower3), color=errorLineColor, linetype=2) +
-                      geom_line(aes(y = upper3), color=errorLineColor, linetype=2) +
-                      annotate("text", 1, 3.52, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
-                      annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
-                      labs(x=xlab, y=ylab) +
-                      theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
-      print(p)
-      # 
-      # p$x$data[[1]]$text <- paste0("Time (years): ", df$Time, "<br />", "FEV1 (L): ", round(df$FEV1,3),
-      #                              "<br />FEV1 lower (L): ", round(df$FEV1_lower,3), "<br />FEV1 upper (L): ",
-      #                              round(df$FEV1_upper,3))
-      # 
-      # p$x$data[[3]]$hoverinfo="none"
-      # p$x$data[[4]]$hoverinfo="none"
-      # p
-
-        ################END OF PLOTLY CODE########################
-
-    })
+     
+ 
 } #end of server <- function
 
 
