@@ -105,7 +105,7 @@ ui <- fluidPage(
 
                   tabPanel("Model Summary",
                            verbatimTextOutput("lmer_summary")),
-                  tabPanel("Resources",  includeMarkdown("resources.Rmd")),
+                  #tabPanel("Resources",  includeMarkdown("resources.Rmd")),
                   tabPanel("Disclaimer",  includeMarkdown("disclaimer.Rmd")),
                   tabPanel("About",  includeMarkdown("about.Rmd"))
                   #textOutput("binary") #for debug; monitoring binary value. Amin
