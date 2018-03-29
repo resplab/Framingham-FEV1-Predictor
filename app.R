@@ -57,8 +57,8 @@ ui <- fluidPage(
                           
                                  numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
                                  numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
-                                 numericInput("beer","Beer intake (cans or bottles/wk)", value = NULL, step = 1),
-                                 numericInput("wine","Wine intake (glasses/wk)", value = NULL,min = 0,step = 1),
+                                 numericInput("beer","Beer intake (cans or bottles/wk)", value = NULL, min = 0, max = 50, step = 1),
+                                 numericInput("wine","Wine intake (glasses/wk)", value = NULL, min = 0,step = 1),
                                  numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1),
                                  actionButton("prev_input_cat2", "Back"),
                                  actionButton("next_input_cat2", "Forward")), 
@@ -106,8 +106,8 @@ ui <- fluidPage(
                   tabPanel("Model Summary",
                            verbatimTextOutput("lmer_summary")),
                   #tabPanel("Resources",  includeMarkdown("resources.Rmd")),
-                  tabPanel("Disclaimer",  includeMarkdown("disclaimer.Rmd")),
-                  tabPanel("About",  includeMarkdown("about.Rmd"))
+                  tabPanel("Disclaimer",  includeMarkdown("./disclaimer.rmd")),
+                  tabPanel("About",  includeMarkdown("./about.rmd"))
                   #textOutput("binary") #for debug; monitoring binary value. Amin
       )
     )
@@ -144,10 +144,6 @@ server <- function(input, output, session) {
     
   })
   
-
-  output$markdown <- renderUI({
-    HTML(markdown::markdownToHTML(knit('help_tab.Rmd', quiet = TRUE)))
-  })
 
   #moved here to make it constanly recalculate binary code. Amin
  
@@ -391,7 +387,7 @@ server <- function(input, output, session) {
 
 
       #use collapse="" to get rid of spaces between 1s and 0s; use sep="" to get rid of space betweeen file name and ".rds"
-      full_file_name = paste(paste(file_name(),collapse=""),".rds",sep="")
+      full_file_name = paste("./",paste(file_name(),collapse=""),".rds",sep="")
       # browser()
 
       #if file exists but model has not been loaded, load the model from the file
@@ -441,7 +437,7 @@ server <- function(input, output, session) {
         EQUATION_FACTORS3 <- c('(year|RANDOMID)',#factors for fev1_0 unknown - ask Chen
                                NA,'triglycerides:cpackyr',NA,'albumin:sex',NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA)
         FACTORS_NAMES_DATAFRAME <- data.frame(INPUTS, EQUATION_FACTORS1, EQUATION_FACTORS2, EQUATION_FACTORS3)
-        progress$set(message = "Fitting new reduced model. Please wait...", value = 0.30)
+        progress$set(message = "Fitting new reduced model. This might take a few minutes...", value = 0.30)
         
         #save data frames for unit tests - commented out under normal operation
         # saveRDS(BINARY_CODE_DATAFRAME,"FEV_calculate_lmer_fn_input1_BINARY_CODE_DATAFRAME.RDS")
@@ -452,15 +448,18 @@ server <- function(input, output, session) {
         #set the model-loaded-flag to TRUE
         GLOBAL_lmer_model_loaded_FLAG <<- TRUE
 
-        progress$set(message = "Saving the model", value = 0.80)
+        progress$set(message = "Saving the model", value = 0.60)
         saveRDS(lmer_function_output,file=full_file_name)
         
-        progress$set(message = "Loading the model", value = 1)
+        progress$set(message = "Loading the model, this might take a few minutes", value = 0.80)
         GLOBAL_lmer_model <<- lmer_function_output #most important has to be after line 214
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
-
+        
+        progress$set(message = "Plotting...", value = 0.90)
+        
           output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
-
+          progress$set(message = "Done!", value = 1)
+          
       }
        output$plot_FEV1_decline <- renderPlotly({
          print (FEV1_plot())
