@@ -421,7 +421,6 @@ server <- function(input, output, session) {
     
     #ggolot code
     
-    cat(file=stderr(), "hey", input$fev1_0, "\n")
     ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
                geom_ribbon(aes(ymin=lower3, ymax=upper3), linetype=2, alpha=0.1) +
                geom_line(aes(y = lower3), color=errorLineColor, linetype=2) +
