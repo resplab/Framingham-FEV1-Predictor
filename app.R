@@ -72,11 +72,11 @@ ui <- fluidPage(
                  numericInput("alk_phos","Alkaline Phosphotase (IU/L)",value = NULL, min = 16, max = 98, step = 1),
                  actionButton("prev_input_cat4", "Back"),
                  #actionButton("next_input_cat", "Forward")
-                 
+                 actionButton("clear_inputs_button", "Clear Inputs"),
                  downloadButton("save_inputs_button", "Save Inputs"),
                  fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs..."),
-                 actionButton("lmer_Submit_button", "Run Linear mixed-effects models"),
-                 actionButton("clear_inputs_button", "Clear Inputs"))
+                 actionButton("lmer_Submit_button", "Run Linear mixed-effects models")
+                 )
         
       ),
 
@@ -452,14 +452,16 @@ server <- function(input, output, session) {
 
       #if file exists but model has not been loaded, load the model from the file
       if(file.exists(full_file_name) && is.null(GLOBAL_lmer_model_loaded_FLAG)){
-        progress$set(message = "Extracting lmer summary from RDS File", value = 1.00)
+        progress$set(message = "Model found. Loading the model...", value = 0.50)
         lmer_function_output <- readRDS(full_file_name)
 
         #set the model-loaded-flag to TRUE
         GLOBAL_lmer_model_loaded_FLAG <<- TRUE
-
+        progress$set(message = "Extracting model parameters", value = 0.80)
         GLOBAL_lmer_model <<- lmer_function_output #could also be after lines 178-181
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
+        progress$set(message = "Plotting", value = 1.0)
+  
         output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
         
       }
@@ -495,7 +497,7 @@ server <- function(input, output, session) {
         EQUATION_FACTORS3 <- c('(year|RANDOMID)',#factors for fev1_0 unknown - ask Chen
                                NA,'triglycerides:cpackyr',NA,'albumin:sex',NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA)
         FACTORS_NAMES_DATAFRAME <- data.frame(INPUTS, EQUATION_FACTORS1, EQUATION_FACTORS2, EQUATION_FACTORS3)
-        progress$set(message = "calculating lmer function", value = 1.00)
+        progress$set(message = "Fitting new reduced model. Please wait...", value = 0.30)
         
         #save data frames for unit tests - commented out under normal operation
         # saveRDS(BINARY_CODE_DATAFRAME,"FEV_calculate_lmer_fn_input1_BINARY_CODE_DATAFRAME.RDS")
@@ -503,15 +505,13 @@ server <- function(input, output, session) {
         
         lmer_function_output <- FEV_calculate_lmer_fn(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
 
-        progress$set(message = "Extracting lmer summary", value = 1.00)
-        # lmer_function_output_summary <- summary(lmer_function_output)
-
         #set the model-loaded-flag to TRUE
         GLOBAL_lmer_model_loaded_FLAG <<- TRUE
 
-        progress$set(message = "Saving RDATA file w/ model and summary", value = 1.00)
+        progress$set(message = "Saving the model", value = 0.80)
         saveRDS(lmer_function_output,file=full_file_name)
-
+        
+        progress$set(message = "Loading the model", value = 1)
         GLOBAL_lmer_model <<- lmer_function_output #most important has to be after line 214
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
 
