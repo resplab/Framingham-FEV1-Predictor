@@ -40,10 +40,7 @@ ui <- fluidPage(
   sidebarLayout(
 
     sidebarPanel(
-      tabsetPanel(id = "category",
-        #tabPanel(title=paste(emo::ji("woman"), " ", emo::ji("man")), value = "panel1", 
 
-        tabPanel(title=icon("user"), value = "panel1", 
                  helpText("Enter as many patient characteristics as possible.",
                           "When all fields are completed, a validated model will make predictions.",
                           "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
@@ -56,7 +53,6 @@ ui <- fluidPage(
                    div(id = "LifeStyle",
                        numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
                        numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
-                       numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
                        numericInput("beer","Beer intake (cans or bottles/wk)", value = NULL, min = 0, max = 50, step = 1),
                        numericInput("wine","Wine intake (glasses/wk)", value = NULL, min = 0,step = 1),
                        numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1)
@@ -66,6 +62,7 @@ ui <- fluidPage(
                  a(id = "toggleSymptomsTreatments", "Show/hide SymptomsTreatments info", href = "#"),
                  shinyjs::hidden(
                    div(id = "SymptomsTreatments",
+                       numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
                        selectInput("ba_use", "Bronchodilator or inhaler", list('','Current use', 'Former use', 'No use'), selected = ''),
                        selectInput("dys_exer", "Dyspnea on exertion", list('','Yes, on walking up stairs or other vigorous excercise','Yes, on rapid walking or other moderderate exercise','On any slight exertion','No'), selected = ''),
                        selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'No'),selected = '')
@@ -73,9 +70,9 @@ ui <- fluidPage(
                  ),
                  
                  br(),
-                 a(id = "toggleBloodWork", "Show/hide BloodWork info", href = "#"),
+                 a(id = "toggleBloodTest", "Show/hide BloodTest info", href = "#"),
                  shinyjs::hidden(
-                   div(id = "BloodWork",
+                   div(id = "BloodTest",
                        numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
                        numericInput("white_bc","White blood cells (10^9/L)", value = NULL, min = 25, max = 172, step = 0.01),
                        numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01),
@@ -83,11 +80,7 @@ ui <- fluidPage(
                        numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1),
                        numericInput("alk_phos","Alkaline Phosphotase (IU/L)",value = NULL, min = 16, max = 98, step = 1)
                    )
-                 )
-                 )
-        
-
-        
+       
       ),
 
       uiOutput('inputParam'),
@@ -150,8 +143,8 @@ server <- function(input, output, session) {
   shinyjs::onclick("toggleSymptomsTreatments",
                    shinyjs::toggle(id = "SymptomsTreatments", anim = TRUE))    
   
-  shinyjs::onclick("toggleBloodWork",
-                   shinyjs::toggle(id = "BloodWork", anim = TRUE)) 
+  shinyjs::onclick("toggleBloodTest",
+                   shinyjs::toggle(id = "BloodTest", anim = TRUE)) 
   # Output Functions-----------------------------------------------------------------------------------------------------------
   
   output$inputParam<-renderUI({
