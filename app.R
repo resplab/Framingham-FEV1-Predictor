@@ -55,12 +55,12 @@ ui <- fluidPage(
                  helpText("Enter as many patient characteristics as possible.",
                           "When all fields are completed, a validated model will make predictions.",
                           "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
-                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), 2.75, min=1.25, max=3.55),
-                 numericInput("age", labelMandatory("Age (year)"), value = 36, min = 20, max = 62, step = 1),
+                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), valu = NULL, min=1.25, max=3.55),
+                 numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 62, step = 1),
                  selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = ''),
                  numericInput("height", labelMandatory("Height (cm)"),value = NULL, min = 147.3, max = 190.5,  step = 0.1),
                  icon("glass"),
-                 a(id = "toggleLifeStyle", "Show/hide LifeStyle", href = "#"),
+                 a(id = "toggleLifeStyle", "LifeStyle", href = "#"),
                  shinyjs::hidden(
                    div(id = "LifeStyle",
                        numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
@@ -71,7 +71,7 @@ ui <- fluidPage(
                    )
                  ),
                  br(), icon("stethoscope"),
-                 a(id = "toggleSymptomsTreatments", "Show/hide Symptoms & Treatments", href = "#"),
+                 a(id = "toggleSymptomsTreatments", "Symptoms & Treatments", href = "#"),
                  shinyjs::hidden(
                    div(id = "SymptomsTreatments",
                        numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
@@ -82,7 +82,7 @@ ui <- fluidPage(
                  ),
                 
                  br(), icon("tint"),"  ",
-                 a(id = "toggleBloodTest", "Show/hide Blood Test", href = "#"),
+                 a(id = "toggleBloodTest", "Blood Test", href = "#"),
                  shinyjs::hidden(
                    div(id = "BloodTest",
                        numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
@@ -102,7 +102,7 @@ ui <- fluidPage(
       
       br(),
       br(),
-      actionButton("lmer_Submit_button", "Run the prediction model"),
+      actionButton("submit", "Run the prediction model"),
       actionButton("clear_inputs_button", "Reset")
       
       #submitButton("xx")
@@ -394,9 +394,16 @@ server <- function(input, output, session) {
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
 
+  observe({
+    if (is.null(input$fev1_0) || input$fev1_0 == "" || is.null (input$age) || input$age == "" || is.null (input$sex) || input$sex == "" || is.null (input$height) || input$height == "") {
+      shinyjs::disable("submit")
+    }else{
+      shinyjs::enable("submit")
+    }
+  })  
   
   #make lmer summary non-reactive --> it is only calculated when the user presses "Run Linear mixed-effects models" button
-     observeEvent(input$lmer_Submit_button, {
+     observeEvent(input$submit, {
 
 
       # Create a Progress object
