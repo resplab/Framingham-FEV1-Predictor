@@ -369,7 +369,7 @@ make_predictions <- function(lmfin, predictors) {
 
   data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr,data_pred2$fev1_0,pred3,se3,lower3,upper3)
   data_pred_fin <- as.data.frame(data_pred_fin)
-  colnames(data_pred_fin)<-c("year","SmokeStatus","cpackyr","fev1_0","pred3","se3","lower3", "upper3")
+  colnames(data_pred_fin)<-c("year","SmokeStatus","cpackyr","fev1_0","pred3","se3","lowerbound", "upperbound")
   # Note: We used baseline FEV1 to predict future FEV1, so baseline FEV1 should be set to original value, se should be 0
   data_pred_fin$pred3[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]*0.794445308+2.979447188 #backtransformed
   data_pred_fin$se3[data_pred_fin$year==0]<-0
