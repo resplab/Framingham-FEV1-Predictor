@@ -48,7 +48,8 @@ ui <- fluidPage(
                  numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
                  selectInput("sex","Gender",list('','female', 'male'),selected = ''),
                  numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
-                 a(id = "toggleLifeStyle", "Show/hide LifeStyle info", href = "#"),
+                 icon("glass"),
+                 a(id = "toggleLifeStyle", "Show/hide LifeStyle", href = "#"),
                  shinyjs::hidden(
                    div(id = "LifeStyle",
                        numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
@@ -58,8 +59,8 @@ ui <- fluidPage(
                        numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1)
                    )
                  ),
-                 br(),
-                 a(id = "toggleSymptomsTreatments", "Show/hide SymptomsTreatments info", href = "#"),
+                 br(), icon("stethoscope"),
+                 a(id = "toggleSymptomsTreatments", "Show/hide Symptoms & Treatments", href = "#"),
                  shinyjs::hidden(
                    div(id = "SymptomsTreatments",
                        numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
@@ -68,9 +69,9 @@ ui <- fluidPage(
                        selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'No'),selected = '')
                    )
                  ),
-                 
-                 br(),
-                 a(id = "toggleBloodTest", "Show/hide BloodTest info", href = "#"),
+                
+                 br(), icon("tint"),"  ",
+                 a(id = "toggleBloodTest", "Show/hide Blood Test", href = "#"),
                  shinyjs::hidden(
                    div(id = "BloodTest",
                        numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
