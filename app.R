@@ -366,10 +366,10 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
-               geom_ribbon(aes(ymin=lower3, ymax=upper3), linetype=2, alpha=0.1) +
-               geom_line(aes(y = lower3), color=errorLineColor, linetype=2) +
-               geom_line(aes(y = upper3), color=errorLineColor, linetype=2) +
+   ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
+               geom_ribbon(aes(ymin=lowerbound, ymax= upperbound), linetype=2, alpha=0.1) +
+               geom_line(aes(y = lowerbound), color=errorLineColor, linetype=2) +
+               geom_line(aes(y = upperbound), color=errorLineColor, linetype=2) +
                annotate("text", 1, 3.52, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
                annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y=ylab) +
