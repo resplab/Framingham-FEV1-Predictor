@@ -65,7 +65,7 @@ ui <- fluidPage(
         #tabPanel(title=paste(emo::ji("pill"), " ", emo::ji("mask")) , value = "panel3", 
         tabPanel(title=icon("stethoscope") , value = "panel3",          
                  selectInput("ba_use", "Bronchodilator or inhaler", list('','Current use', 'Former use', 'No use'), selected = ''),
-                 selectInput("dys_exer", "Dyspnea on exertion", list('','On rigorous exercise','On moderate exercise','On slight exertion','No dyspnea on ex.'), selected = ''),
+                 selectInput("dys_exer", "Dyspnea on exertion", list('','Yes, on walking up stairs or other vigorous excercise','Yes, on rapid walking or other moderderate exercise','On any slight exertion','No'), selected = ''),
                  selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'No'),selected = ''),
                  actionButton("prev_input_cat3", "Back"),
                  actionButton("next_input_cat3", "Forward")),
