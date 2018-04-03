@@ -66,7 +66,7 @@ ui <- fluidPage(
         tabPanel(title=icon("stethoscope") , value = "panel3",          
                  selectInput("ba_use", "Bronchodilator or aerosol", list('','Current use', 'Former use', 'No use'), selected = ''),
                  selectInput("dys_exer", "Dyspnea on exertion", list('','On rigorous exercise','On moderate exercise','On slight exertion','No dyspnea on ex.'), selected = ''),
-                 selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'Maybe', 'No'),selected = ''),
+                 selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'No'),selected = ''),
                  actionButton("prev_input_cat3", "Back"),
                  actionButton("next_input_cat3", "Forward")),
         #tabPanel(title=paste(emo::ji("syringe"), " ", emo::ji("microscope")) , value = "panel4", 
@@ -437,7 +437,7 @@ server <- function(input, output, session) {
         EQUATION_FACTORS3 <- c('(year|RANDOMID)',#factors for fev1_0 unknown - ask Chen
                                NA,'triglycerides:cpackyr',NA,'albumin:sex',NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA)
         FACTORS_NAMES_DATAFRAME <- data.frame(INPUTS, EQUATION_FACTORS1, EQUATION_FACTORS2, EQUATION_FACTORS3)
-        progress$set(message = "Fitting new reduced model. This might take a few minutes...", value = 0.30)
+        progress$set(message = "Fitting new reduced model. This might take a few minutes", value = 0.30)
         
         #save data frames for unit tests - commented out under normal operation
         # saveRDS(BINARY_CODE_DATAFRAME,"FEV_calculate_lmer_fn_input1_BINARY_CODE_DATAFRAME.RDS")
