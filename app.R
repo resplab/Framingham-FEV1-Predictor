@@ -45,13 +45,13 @@ ui <- fluidPage(
         tabPanel(title=icon("user"), value = "panel1", 
                  helpText("Enter as many patient characteristics as possible.",
                           "When all fields are completed, a validated model will make predictions.",
-                          "Fewer inputs will trigger the appropriate reduced model. See Resources for more details."), 
+                          "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
                  numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
                  numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
                  selectInput("sex","Gender",list('','female', 'male'),selected = ''),
                  numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
                  #actionButton("prev_input_cat", "Back"),
-                 actionButton("next_input_cat1", "Forward")), 
+                 actionButton("next_input_cat1", "Forward")),
         #tabPanel(title=paste(emo::ji("smoking"), " ", emo::ji("wine_glass")), value = "panel2", numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
         tabPanel(title=icon("glass"), value = "panel2", numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
                           
@@ -82,7 +82,7 @@ ui <- fluidPage(
                  actionButton("clear_inputs_button", "Clear Inputs"),
                  downloadButton("save_inputs_button", "Save Inputs"),
                  fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs..."),
-                 actionButton("lmer_Submit_button", "Run Linear mixed-effects models")
+                 actionButton("lmer_Submit_button", "Run the prediction model")
                  )
         
       ),
