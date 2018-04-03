@@ -51,7 +51,8 @@ ui <- fluidPage(
                  selectInput("sex","Gender",list('','female', 'male'),selected = ''),
                  numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
                  #actionButton("prev_input_cat", "Back"),
-                 actionButton("next_input_cat1", "Forward")),
+                 actionButton("next_input_cat1", "Forward")
+                 ),
         #tabPanel(title=paste(emo::ji("smoking"), " ", emo::ji("wine_glass")), value = "panel2", numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
         tabPanel(title=icon("glass"), value = "panel2", numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
                           
@@ -60,6 +61,7 @@ ui <- fluidPage(
                                  numericInput("beer","Beer intake (cans or bottles/wk)", value = NULL, min = 0, max = 50, step = 1),
                                  numericInput("wine","Wine intake (glasses/wk)", value = NULL, min = 0,step = 1),
                                  numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1),
+                                 br(),
                                  actionButton("prev_input_cat2", "Back"),
                                  actionButton("next_input_cat2", "Forward")), 
         #tabPanel(title=paste(emo::ji("pill"), " ", emo::ji("mask")) , value = "panel3", 
@@ -79,19 +81,20 @@ ui <- fluidPage(
                  numericInput("alk_phos","Alkaline Phosphotase (IU/L)",value = NULL, min = 16, max = 98, step = 1),
                  actionButton("prev_input_cat4", "Back"),
                  #actionButton("next_input_cat", "Forward")
-                 actionButton("clear_inputs_button", "Clear Inputs"),
+                 #actionButton("clear_inputs_button", "Reset"),
                  downloadButton("save_inputs_button", "Save Inputs"),
-                 fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs..."),
-                 actionButton("lmer_Submit_button", "Run the prediction model")
+                 fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs...")
                  )
         
       ),
 
-      
       uiOutput('inputParam'),
       
       br(),
-      br()
+      br(),
+      actionButton("lmer_Submit_button", "Run the prediction model"),
+      actionButton("clear_inputs_button", "Reset")
+      
       #submitButton("xx")
     ),
      
@@ -219,12 +222,7 @@ server <- function(input, output, session) {
 
   #'Clear Inputs' button - set all inputs to NULL
   observeEvent(input$clear_inputs_button, {
-    GLOBAL_lmer_model_loaded_FLAG <- NULL
-    FEV_input_IDs <- FEV_input_labels()
-    for (i in 1:length(FEV_input_IDs)) {
-      session$sendInputMessage(FEV_input_IDs[i],  list(value = NULL) )
-    }
-   
+    session$reload()
   })
 
 
