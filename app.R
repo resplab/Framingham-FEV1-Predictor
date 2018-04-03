@@ -2,7 +2,6 @@
 #edited main panel, particularly the Help Tab - got rid of the text that was simply typed into R file main panel
 #added two libraries - rmarkdown and knitr
 library(shiny)
-library(shinyjs)
 library(shinythemes)
 library(ggplot2)
 library(plotly)
@@ -55,7 +54,7 @@ ui <- fluidPage(
                  helpText("Enter as many patient characteristics as possible.",
                           "When all fields are completed, a validated model will make predictions.",
                           "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
-                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), valu = NULL, min=1.25, max=3.55),
+                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), valu = NULL, min=1.25, max=3.55, step = 0.25),
                  numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 62, step = 1),
                  selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = ''),
                  numericInput("height", labelMandatory("Height (cm)"),value = NULL, min = 147.3, max = 190.5,  step = 0.1),
@@ -160,6 +159,17 @@ server <- function(input, output, session) {
   
   shinyjs::onclick("toggleBloodTest",
                    shinyjs::toggle(id = "BloodTest", anim = TRUE)) 
+  
+  
+  observe({
+    if (is.null(input$fev1_0) || input$fev1_0 == "" || is.null (input$age) || input$age == "" || is.null (input$sex) || input$sex == "" || is.null (input$height) || input$height == "") {
+      shinyjs::disable("submit")
+    }else{
+      shinyjs::enable("submit")
+    }
+  })  
+  
+
   # Output Functions-----------------------------------------------------------------------------------------------------------
   
   output$inputParam<-renderUI({
@@ -394,14 +404,6 @@ server <- function(input, output, session) {
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
 
-  observe({
-    if (is.null(input$fev1_0) || input$fev1_0 == "" || is.null (input$age) || input$age == "" || is.null (input$sex) || input$sex == "" || is.null (input$height) || input$height == "") {
-      shinyjs::disable("submit")
-    }else{
-      shinyjs::enable("submit")
-    }
-  })  
-  
   #make lmer summary non-reactive --> it is only calculated when the user presses "Run Linear mixed-effects models" button
      observeEvent(input$submit, {
 
