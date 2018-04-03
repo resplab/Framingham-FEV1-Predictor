@@ -20,7 +20,17 @@ library(rmarkdown) #for markdown file
 library(knitr) #for markdown file
 library(htmltools)
 
-options(shiny.error = browser) #debug, amin
+#options(shiny.error = browser) #debug, amin
+
+labelMandatory <- function(label) {
+  tagList(
+    label,
+    span("*", class = "mandatory_star")
+  )
+}
+
+appCSS <-
+  ".mandatory_star { color: red; }"
 
 
 source('./FEV_functions.R')
@@ -33,6 +43,7 @@ button_width <- 160
 # lmer_function_output_summary <- NULL
 ui <- fluidPage(
   shinyjs::useShinyjs(),
+  shinyjs::inlineCSS(appCSS),
   theme = shinytheme("united"),
   tags$head(tags$script(src = "message-handler.js")),
   titlePanel("Individualized Framingham Lung Function Decline Predictor"),
@@ -44,10 +55,10 @@ ui <- fluidPage(
                  helpText("Enter as many patient characteristics as possible.",
                           "When all fields are completed, a validated model will make predictions.",
                           "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
-                 numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
-                 numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
-                 selectInput("sex","Gender",list('','female', 'male'),selected = ''),
-                 numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
+                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), 2.75, min=1.25, max=3.55),
+                 numericInput("age", labelMandatory("Age (year)"), value = 36, min = 20, max = 62, step = 1),
+                 selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = ''),
+                 numericInput("height", labelMandatory("Height (cm)"),value = NULL, min = 147.3, max = 190.5,  step = 0.1),
                  icon("glass"),
                  a(id = "toggleLifeStyle", "Show/hide LifeStyle", href = "#"),
                  shinyjs::hidden(
