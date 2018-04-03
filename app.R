@@ -78,7 +78,10 @@ ui <- fluidPage(
                        numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01),
                        numericInput("alb","Albumin (g/L)",value = NULL, min = 24, max = 59, step = 1),
                        numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1),
-                       numericInput("alk_phos","Alkaline Phosphotase (IU/L)",value = NULL, min = 16, max = 98, step = 1)
+                       numericInput("alk_phos","Alkaline Phosphotase (IU/L)",value = NULL, min = 16, max = 98, step = 1),
+                       downloadButton("save_inputs_button", "Save Inputs"),
+                       fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs...")
+                   
                    )
        
       ),
