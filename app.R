@@ -1,8 +1,8 @@
 #moved width outside the mainPanel
 #edited main panel, particularly the Help Tab - got rid of the text that was simply typed into R file main panel
-#now, able to upload information from bookdown document into the Help Tab. Pieces of code were added only into this file.
 #added two libraries - rmarkdown and knitr
 library(shiny)
+library(shinyjs)
 library(shinythemes)
 library(ggplot2)
 library(plotly)
@@ -10,15 +10,14 @@ library(shinyjs)
 library(lme4) # to build linear mixed model
 library(lmerTest) # for outputing test results from the mixed model
 library(plyr) #for merging data
-library(MuMIn)
-library(fBasics)
-library(ROCR)
-library(pROC)
-library(ipw)
+#library(MuMIn)
+#library(fBasics)
+#library(ROCR)
+#library(pROC)
+#library(ipw)
 library(data.table)
-library(rmarkdown) #for bookdown file
-library(bookdown)
-library(knitr) #for bookdown file
+library(rmarkdown) #for markdown file
+library(knitr) #for markdown file
 library(htmltools)
 
 options(shiny.error = browser) #debug, amin
