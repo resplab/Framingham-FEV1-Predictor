@@ -373,8 +373,11 @@ make_predictions <- function(lmfin, predictors) {
   # Note: We used baseline FEV1 to predict future FEV1, so baseline FEV1 should be set to original value, se should be 0
   data_pred_fin$pred3[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]*0.794445308+2.979447188 #backtransformed
   data_pred_fin$se3[data_pred_fin$year==0]<-0
-  data_pred_fin$lower3[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
-  data_pred_fin$upper3[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
+  data_pred_fin$lowerbound[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
+  data_pred_fin$upperbound[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
+  
+  #calculating %predicted FEV1
+ 
   
   #return(data_pred) #debug Amin. TODO
   return(data_pred_fin)
