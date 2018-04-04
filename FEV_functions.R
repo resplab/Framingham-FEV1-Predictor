@@ -379,11 +379,17 @@ make_predictions <- function(lmfin, predictors) {
   #calculating %predicted FEV1, sex == 1 male. sex == 1 female. Following the NHANES-III algorithm, using 25y/o white Caucasian as reference,for people aged 20 years and above
   if   (predictors$sex == 1) { 
   data_pred_fin$percentpred <- 100 * data_pred_fin$pred3 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+  data_pred_fin$percentpred_upper <- 100 * data_pred_fin$upperbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+  data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+  
   }
   
   if   (predictors$sex == 2) { 
     data_pred_fin$percentpred <- 100 * data_pred_fin$pred3 / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-  }
+    data_pred_fin$percentpred_upper <- 100 * data_pred_fin$upperbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+    data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+    
+    }
   
   #return(data_pred) #debug Amin. TODO
   return(data_pred_fin)
