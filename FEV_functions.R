@@ -190,7 +190,7 @@ FEV_calculate_lmer_fn<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,u
   #Step 1: calculate stablized inverse probability weights of dropping out to the regression model;
   tstarting_time<-ipw::tstartfun(RANDOMID, visit, data_rf4)		#Preparing the data for calculation of inverse probability weight of being censored
   # Calculate inverse probability weight of being censored, which is a stablized inverse probability weight
-  ipw<- ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
+  ipw<- ipw::ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
               denominator=~age+agecat+sex+triglycerides+hematocrit+albumin+globulin+ALP+wine+cocktail+WBC
               +QRS_intv+alcohol_indx+height2+broncho+dyspnea_exc+night_sym,
               id = RANDOMID, tstart = tstarting_time, timevar = visit, type = "first",
@@ -458,7 +458,7 @@ FEV_calculate_coefficients<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFR
   #Step 1: calculate stablized inverse probability weights of dropping out to the regression model;
   tstarting_time<-ipw::tstartfun(RANDOMID, visit, data_rf4)		#Preparing the data for calculation of inverse probability weight of being censored
   # Calculate inverse probability weight of being censored, which is a stablized inverse probability weight
-  ipw<- ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
+  ipw<- ipw::ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
               denominator=~age+agecat+sex+triglycerides+hematocrit+albumin+globulin+ALP+wine+cocktail+WBC
               +QRS_intv+alcohol_indx+height2+broncho+dyspnea_exc+night_sym,
               id = RANDOMID, tstart = tstarting_time, timevar = visit, type = "first",
