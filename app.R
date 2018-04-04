@@ -130,7 +130,8 @@ ui <- fluidPage(
       tabsetPanel(type="tabs",
                   tabPanel("Plot",
                            tags$p("Predicted FEV1 with time:"),
-                           plotlyOutput("plot_FEV1_decline")
+                           plotlyOutput("plot_FEV1_decline"),
+                           plotlyOutput("plot_FEV1_percentpred")
                   ),
 
                   tabPanel("Model Summary",
@@ -403,7 +404,7 @@ server <- function(input, output, session) {
     predictors[,'beer'] <- NULL
     
     
-    prediction_results <- make_predictions(GLOBAL_lmer_model, predictors)
+    prediction_results <<- make_predictions(GLOBAL_lmer_model, predictors)
     
     
     
@@ -448,6 +449,46 @@ server <- function(input, output, session) {
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
 
+  FEV1_percent_pred_plot <- reactive ({
+
+    #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
+    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 0)
+    
+    #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
+    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 1)
+    
+    #create prediction_results_toPlot dataframe
+    #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
+    #if either "smoke_year" or "daily_cigs" is not NA, then use prediction_results_ContinueSmoke
+    if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
+    if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
+    
+    # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
+    
+    f <- list(
+      family = "Courier New, monospace",
+      size = 18,
+      color = "#7f7f7f"
+    )
+    x <- list(
+      title = "Time (year)",
+      titlefont = f
+    )
+    y <- list(
+      title = "Percent Predicted FEV1 (%)",
+      titlefont = f
+    )
+    
+    ggplotly(ggplot(prediction_results_toPlot, aes(year, percentpred)) + geom_line(aes(y = percentpred), color="black", linetype=1) +
+               #geom_ribbon(aes(ymin=lowerbound, ymax= upperbound), linetype=2, alpha=0.1) +
+               #geom_line(aes(y = lowerbound), color=errorLineColor, linetype=2) +
+               #geom_line(aes(y = upperbound), color=errorLineColor, linetype=2) +
+               annotate("text", 1, 3.52, label="Percent Predicted FEV1", colour="black", size=4, hjust=0) +
+               #annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+               labs(x=xlab, y="FEV1 Percent Predicted (%)") +
+               ylim(50, 100) +
+               theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+  })
   #make lmer summary non-reactive --> it is only calculated when the user presses "Run Linear mixed-effects models" button
      observeEvent(input$submit, {
 
@@ -534,6 +575,10 @@ server <- function(input, output, session) {
       }
        output$plot_FEV1_decline <- renderPlotly({
          print (FEV1_plot())
+       })
+       
+       output$plot_FEV1_percentpred <- renderPlotly({
+         print (FEV1_percent_pred_plot())
        })
     }) 
      
