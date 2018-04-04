@@ -188,9 +188,9 @@ FEV_calculate_lmer_fn<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,u
   #-------------------------------------------#
   # Note: the model is based on framingham data data_rf4 (centered/scaled, with a censoring variable)
   #Step 1: calculate stablized inverse probability weights of dropping out to the regression model;
-  tstarting_time<-tstartfun(RANDOMID, visit, data_rf4)		#Preparing the data for calculation of inverse probability weight of being censored
+  tstarting_time<-ipw::tstartfun(RANDOMID, visit, data_rf4)		#Preparing the data for calculation of inverse probability weight of being censored
   # Calculate inverse probability weight of being censored, which is a stablized inverse probability weight
-  ipw<- ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
+  ipw<- ipw::ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
               denominator=~age+agecat+sex+triglycerides+hematocrit+albumin+globulin+ALP+wine+cocktail+WBC
               +QRS_intv+alcohol_indx+height2+broncho+dyspnea_exc+night_sym,
               id = RANDOMID, tstart = tstarting_time, timevar = visit, type = "first",
@@ -373,8 +373,23 @@ make_predictions <- function(lmfin, predictors) {
   # Note: We used baseline FEV1 to predict future FEV1, so baseline FEV1 should be set to original value, se should be 0
   data_pred_fin$pred3[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]*0.794445308+2.979447188 #backtransformed
   data_pred_fin$se3[data_pred_fin$year==0]<-0
-  data_pred_fin$lower3[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
-  data_pred_fin$upper3[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
+  data_pred_fin$lowerbound[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
+  data_pred_fin$upperbound[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
+  
+  #calculating %predicted FEV1, sex == 1 male. sex == 1 female. Following the NHANES-III algorithm, using 25y/o white Caucasian as reference,for people aged 20 years and above
+  if   (predictors$sex == 1) { 
+  data_pred_fin$percentpred <- 100 * data_pred_fin$pred3 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+  data_pred_fin$percentpred_upper <- 100 * data_pred_fin$upperbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+  data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+  
+  }
+  
+  if   (predictors$sex == 2) { 
+    data_pred_fin$percentpred <- 100 * data_pred_fin$pred3 / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+    data_pred_fin$percentpred_upper <- 100 * data_pred_fin$upperbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+    data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+    
+    }
   
   #return(data_pred) #debug Amin. TODO
   return(data_pred_fin)
@@ -441,9 +456,9 @@ FEV_calculate_coefficients<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFR
   #-------------------------------------------#
   # Note: the model is based on framingham data data_rf4 (centered/scaled, with a censoring variable)
   #Step 1: calculate stablized inverse probability weights of dropping out to the regression model;
-  tstarting_time<-tstartfun(RANDOMID, visit, data_rf4)		#Preparing the data for calculation of inverse probability weight of being censored
+  tstarting_time<-ipw::tstartfun(RANDOMID, visit, data_rf4)		#Preparing the data for calculation of inverse probability weight of being censored
   # Calculate inverse probability weight of being censored, which is a stablized inverse probability weight
-  ipw<- ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
+  ipw<- ipw::ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
               denominator=~age+agecat+sex+triglycerides+hematocrit+albumin+globulin+ALP+wine+cocktail+WBC
               +QRS_intv+alcohol_indx+height2+broncho+dyspnea_exc+night_sym,
               id = RANDOMID, tstart = tstarting_time, timevar = visit, type = "first",

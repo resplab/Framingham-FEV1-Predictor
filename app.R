@@ -2,7 +2,6 @@
 #edited main panel, particularly the Help Tab - got rid of the text that was simply typed into R file main panel
 #added two libraries - rmarkdown and knitr
 library(shiny)
-library(shinyjs)
 library(shinythemes)
 library(ggplot2)
 library(plotly)
@@ -20,7 +19,17 @@ library(rmarkdown) #for markdown file
 library(knitr) #for markdown file
 library(htmltools)
 
-options(shiny.error = browser) #debug, amin
+#options(shiny.error = browser) #debug, amin
+
+labelMandatory <- function(label) {
+  tagList(
+    label,
+    span("*", class = "mandatory_star")
+  )
+}
+
+appCSS <-
+  ".mandatory_star { color: red; }"
 
 
 source('./FEV_functions.R')
@@ -32,6 +41,8 @@ button_width <- 160
 
 # lmer_function_output_summary <- NULL
 ui <- fluidPage(
+  shinyjs::useShinyjs(),
+  shinyjs::inlineCSS(appCSS),
   theme = shinytheme("united"),
   tags$head(tags$script(src = "message-handler.js")),
   titlePanel("Individualized Framingham Lung Function Decline Predictor"),
@@ -39,70 +50,91 @@ ui <- fluidPage(
   sidebarLayout(
 
     sidebarPanel(
-      tabsetPanel(id = "category",
-        #tabPanel(title=paste(emo::ji("woman"), " ", emo::ji("man")), value = "panel1", 
-        tabPanel(title=icon("user"), value = "panel1", 
+
                  helpText("Enter as many patient characteristics as possible.",
                           "When all fields are completed, a validated model will make predictions.",
                           "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
-                 numericInput('fev1_0', 'FEV1 at baseline (L)', 2.75, min=1.25, max=3.55),
-                 numericInput("age","Age (year)", value = 36, min = 20, max = 62, step = 1),
-                 selectInput("sex","Gender",list('','female', 'male'),selected = ''),
-                 numericInput("height","Height (cm)",value = NULL, min = 147.3, max = 190.5,  step = 0.1),
-                 #actionButton("prev_input_cat", "Back"),
-                 actionButton("next_input_cat1", "Forward")
+                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), value = NULL, min = 1, max = 5, step = 0.25),
+                 numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 100, step = 1),
+                 selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = NULL),
+                 numericInput("height", labelMandatory("Height (cm)"),value = NULL, min = 100, max = 250,  step = 0.1),
+                 icon("glass"),
+                 a(id = "toggleLifeStyle", "LifeStyle", href = "#"),
+                 shinyjs::hidden(
+                   div(id = "LifeStyle",
+                       numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
+                       numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
+                       numericInput("beer","Beer intake (cans or bottles/wk)", value = NULL, min = 0, max = 50, step = 1),
+                       numericInput("wine","Wine intake (glasses/wk)", value = NULL, min = 0,step = 1),
+                       numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1)
+                   )
                  ),
-        #tabPanel(title=paste(emo::ji("smoking"), " ", emo::ji("wine_glass")), value = "panel2", numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
-        tabPanel(title=icon("glass"), value = "panel2", numericInput("daily_cigs","cigarettes per day", value = NULL, min = 0, step = 1),
-                          
-                                 numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
-                                 numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
-                                 numericInput("beer","Beer intake (cans or bottles/wk)", value = NULL, min = 0, max = 50, step = 1),
-                                 numericInput("wine","Wine intake (glasses/wk)", value = NULL, min = 0,step = 1),
-                                 numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1),
-                                 br(),
-                                 actionButton("prev_input_cat2", "Back"),
-                                 actionButton("next_input_cat2", "Forward")), 
-        #tabPanel(title=paste(emo::ji("pill"), " ", emo::ji("mask")) , value = "panel3", 
-        tabPanel(title=icon("stethoscope") , value = "panel3",          
-                 selectInput("ba_use", "Bronchodilator or inhaler", list('','Current use', 'Former use', 'No use'), selected = ''),
-                 selectInput("dys_exer", "Dyspnea on exertion", list('','Yes, on walking up stairs or other vigorous excercise','Yes, on rapid walking or other moderderate exercise','On any slight exertion','No'), selected = ''),
-                 selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'No'),selected = ''),
-                 actionButton("prev_input_cat3", "Back"),
-                 actionButton("next_input_cat3", "Forward")),
-        #tabPanel(title=paste(emo::ji("syringe"), " ", emo::ji("microscope")) , value = "panel4", 
-        tabPanel(title=icon("tint") , value = "panel4", 
-                 numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
-                 numericInput("white_bc","White blood cells (10^9/L)", value = NULL, min = 25, max = 172, step = 0.01),
-                 numericInput("trig","Triglycerides (mg/dl)",value = NULL, min=1.77, max = 1342.25, step = 0.01),
-                 numericInput("alb","Albumin (g/L)",value = NULL, min = 24, max = 59, step = 1),
-                 numericInput("glob","Globulin (g/L)",value = NULL, min = 10, max = 49, step = 1),
-                 numericInput("alk_phos","Alkaline Phosphotase (IU/L)",value = NULL, min = 16, max = 98, step = 1),
-                 actionButton("prev_input_cat4", "Back"),
-                 #actionButton("next_input_cat", "Forward")
-                 #actionButton("clear_inputs_button", "Reset"),
-                 downloadButton("save_inputs_button", "Save Inputs"),
-                 fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs...")
-                 )
-        
+                 br(), icon("stethoscope"),
+                 a(id = "toggleSymptomsTreatments", "Symptoms & Treatments", href = "#"),
+                 shinyjs::hidden(
+                   div(id = "SymptomsTreatments",
+                       numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 2, max = 20, step = 1),
+                       selectInput("ba_use", "Bronchodilator or inhaler", list('','Current use', 'Former use', 'No use'), selected = ''),
+                       selectInput("dys_exer", "Dyspnea on exertion", list('','Yes, on walking up stairs or other vigorous excercise','Yes, on rapid walking or other moderderate exercise','On any slight exertion','No'), selected = ''),
+                       selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'No'),selected = '')
+                   )
+                 ),
+                
+                 br(), icon("tint"),"  ",
+                 a(id = "toggleBloodTest", "Blood Test", href = "#"),
+                 shinyjs::hidden(
+                   div(id = "BloodTest",
+                       numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
+                       numericInput("white_bc","White blood cells (10^9/L)", value = NULL, min = 25, max = 172, step = 1),
+                       numericInput("trig","Triglycerides (mg/dl)",value = NULL, min = 1, max = 2000, step = 1),
+                       numericInput("alb","Albumin (g/L)",value = NULL, min = 10, max = 100, step = 1),
+                       numericInput("glob","Globulin (g/L)",value = NULL, min = 1, max = 100, step = 1),
+                       numericInput("alk_phos","Alkaline Phosphotase (IU/L)",value = NULL, min = 1, max = 200, step = 1),
+                       downloadButton("save_inputs_button", "Save Inputs"),
+                       fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs...")
+                   
+                   )
+       
       ),
 
       uiOutput('inputParam'),
       
       br(),
       br(),
-      actionButton("lmer_Submit_button", "Run the prediction model"),
+      shinyjs::hidden(
+        div(id = "FEV1_range",
+            HTML(paste(tags$span(style="color:red", "FEV1 must be between 1L and 5L")))
+        )
+      ),
+      shinyjs::hidden(
+        div(id = "age_range",
+            HTML(paste(tags$span(style="color:red", "age must be between 20 and 100")))
+        )
+      ),
+      shinyjs::hidden(
+        div(id = "height_range",
+            HTML(paste(tags$span(style="color:red", "height must be between 100cm and 250cm")))
+        )
+      ),
+      shinyjs::hidden(
+        div(id = "qrs_range",
+            HTML(paste(tags$span(style="color:red", "QRS (0.01s) out of range ")))
+        )
+      ),
+      actionButton("submit", "Run the prediction model"),
       actionButton("clear_inputs_button", "Reset")
-      
-      #submitButton("xx")
-    ),
+      ),
      
 
     mainPanel(
       tabsetPanel(type="tabs",
-                  tabPanel("Plot",
-                           tags$p("Predicted FEV1 with time:"),
-                           plotlyOutput("plot_FEV1_decline")
+                  tabPanel("FEV1 Decline",
+                           plotlyOutput("plot_FEV1_decline"),
+                           plotlyOutput("plot_FEV1_percentpred")
+                  ),
+                  
+                  tabPanel("COPD Risk",
+                           plotlyOutput("COPD_risk")
                   ),
 
                   tabPanel("Model Summary",
@@ -127,17 +159,64 @@ server <- function(input, output, session) {
   errorLineColor <- "darkcyan"
   buttonremove <- list("sendDataToCloud", "lasso2d", "pan2d" , "zoom2d", "hoverClosestCartesian")
   
-  interventionTitle <- paste0('If the patient is going to use a new intervention,\n',
-                              'please indicate the effect of the new intervention\n',
-                              'relative to his/her current therapy on initial\n',
-                              'improvement in lung function (L).\n',
-                              'If you only want to model the natural course of\n',
-                              'disease progression irrespective of specific intervention,\n',
-                              'please select 0 in here.')
+
   inputOption <- c("baseline information", 
                     "Risk Factors",
                     "Symptoms & Treatments",
                     "Blood Test")
+  # Shinyjs-----------------------------------------------------------------------------------------------------------
+  
+
+  shinyjs::onclick("toggleLifeStyle",
+                   shinyjs::toggle(id = "LifeStyle", anim = TRUE))    
+  
+  shinyjs::onclick("toggleSymptomsTreatments",
+                   shinyjs::toggle(id = "SymptomsTreatments", anim = TRUE))    
+  
+  shinyjs::onclick("toggleBloodTest",
+                   shinyjs::toggle(id = "BloodTest", anim = TRUE)) 
+  
+  
+  observe({
+    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "")) {
+      shinyjs::disable("submit")
+    }else{
+      shinyjs::enable("submit")
+    }
+  })  
+  
+  observe({
+    if (!is.na(input$fev1_0) && (input$fev1_0!="")) {
+      if ((input$fev1_0 < 1)  || (input$fev1_0 > 5))  {
+        shinyjs::show (id = "FEV1_range", anim = TRUE)}
+      else shinyjs::hide (id = "FEV1_range", anim = TRUE)
+    }
+  })    
+  
+  observe({
+    if (!is.na(input$age) && (input$age!="")) {
+      if ((input$age < 20)  || (input$age > 100))  {
+           shinyjs::show (id = "age_range", anim = TRUE)}
+      else shinyjs::hide (id = "age_range", anim = TRUE)
+    }
+  })  
+  
+  observe({
+    if (!is.na(input$height) && (input$height!="")) {
+      if ((input$height < 100)  || (input$height > 250))  {
+        shinyjs::show (id = "height_range", anim = TRUE)}
+      else shinyjs::hide (id = "height_range", anim = TRUE)
+    }
+  })  
+  
+  
+  observe({
+    if (!is.na(input$qrs) && (input$qrs!="")) {
+      if ((input$qrs < 2)  || (input$qrs > 20))  {
+        shinyjs::show (id = "height_qrs", anim = TRUE)}
+      else shinyjs::hide (id = "height_qrs", anim = TRUE)
+    }
+  })  
   
   # Output Functions-----------------------------------------------------------------------------------------------------------
   
@@ -328,7 +407,7 @@ server <- function(input, output, session) {
     predictors[,'beer'] <- NULL
     
     
-    prediction_results <- make_predictions(GLOBAL_lmer_model, predictors)
+    prediction_results <<- make_predictions(GLOBAL_lmer_model, predictors)
     
     
     
@@ -373,11 +452,48 @@ server <- function(input, output, session) {
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
 
+  FEV1_percent_pred_plot <- reactive ({
+
+    #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
+    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 0)
+    
+    #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
+    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 1)
+    
+    #create prediction_results_toPlot dataframe
+    #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
+    #if either "smoke_year" or "daily_cigs" is not NA, then use prediction_results_ContinueSmoke
+    if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
+    if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
+    
+    # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
+    
+    f <- list(
+      family = "Courier New, monospace",
+      size = 18,
+      color = "#7f7f7f"
+    )
+    x <- list(
+      title = "Time (year)",
+      titlefont = f
+    )
+    y <- list(
+      title = "Percent Predicted FEV1 (%)",
+      titlefont = f
+    )
+    
+    ggplotly(ggplot(prediction_results_toPlot, aes(year, percentpred)) + geom_line(aes(y = percentpred), color="black", linetype=1) +
+               geom_ribbon(aes(ymin=percentpred_lower, ymax= percentpred_upper), linetype=2, alpha=0.1) +
+               geom_line(aes(y = percentpred_lower), color=errorLineColor, linetype=2) +
+               geom_line(aes(y = percentpred_upper), color=errorLineColor, linetype=2) +
+               annotate("text", 1, 3.52, label="Percent Predicted FEV1", colour="black", size=4, hjust=0) +
+               annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+               labs(x=xlab, y="FEV1 Percent Predicted (%)") +
+               ylim(50, 100) +
+               theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+  })
   
-  #make lmer summary non-reactive --> it is only calculated when the user presses "Run Linear mixed-effects models" button
-     observeEvent(input$lmer_Submit_button, {
-
-
+     observeEvent(input$submit, {
       # Create a Progress object
       progress <- shiny::Progress$new()
       on.exit(progress$close())
@@ -460,6 +576,10 @@ server <- function(input, output, session) {
       }
        output$plot_FEV1_decline <- renderPlotly({
          print (FEV1_plot())
+       })
+       
+       output$plot_FEV1_percentpred <- renderPlotly({
+         print (FEV1_percent_pred_plot())
        })
     }) 
      
