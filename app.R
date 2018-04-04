@@ -128,10 +128,13 @@ ui <- fluidPage(
 
     mainPanel(
       tabsetPanel(type="tabs",
-                  tabPanel("Plot",
-                           tags$p("Predicted FEV1 with time:"),
+                  tabPanel("FEV1 Decline",
                            plotlyOutput("plot_FEV1_decline"),
                            plotlyOutput("plot_FEV1_percentpred")
+                  ),
+                  
+                  tabPanel("COPD Risk",
+                           plotlyOutput("COPD_risk")
                   ),
 
                   tabPanel("Model Summary",
@@ -480,19 +483,17 @@ server <- function(input, output, session) {
     )
     
     ggplotly(ggplot(prediction_results_toPlot, aes(year, percentpred)) + geom_line(aes(y = percentpred), color="black", linetype=1) +
-               #geom_ribbon(aes(ymin=lowerbound, ymax= upperbound), linetype=2, alpha=0.1) +
-               #geom_line(aes(y = lowerbound), color=errorLineColor, linetype=2) +
-               #geom_line(aes(y = upperbound), color=errorLineColor, linetype=2) +
+               geom_ribbon(aes(ymin=percentpred_lower, ymax= percentpred_upper), linetype=2, alpha=0.1) +
+               geom_line(aes(y = percentpred_lower), color=errorLineColor, linetype=2) +
+               geom_line(aes(y = percentpred_upper), color=errorLineColor, linetype=2) +
                annotate("text", 1, 3.52, label="Percent Predicted FEV1", colour="black", size=4, hjust=0) +
-               #annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+               annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y="FEV1 Percent Predicted (%)") +
                ylim(50, 100) +
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
-  #make lmer summary non-reactive --> it is only calculated when the user presses "Run Linear mixed-effects models" button
+  
      observeEvent(input$submit, {
-
-
       # Create a Progress object
       progress <- shiny::Progress$new()
       on.exit(progress$close())
