@@ -54,9 +54,9 @@ ui <- fluidPage(
                  helpText("Enter as many patient characteristics as possible.",
                           "When all fields are completed, a validated model will make predictions.",
                           "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
-                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), valu = NULL, min=1.25, max=3.55, step = 0.25),
+                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), value = NULL, min=1.25, max=3.55, step = 0.25),
                  numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 62, step = 1),
-                 selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = ''),
+                 selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = NULL),
                  numericInput("height", labelMandatory("Height (cm)"),value = NULL, min = 147.3, max = 190.5,  step = 0.1),
                  icon("glass"),
                  a(id = "toggleLifeStyle", "LifeStyle", href = "#"),
@@ -162,7 +162,7 @@ server <- function(input, output, session) {
   
   
   observe({
-    if (is.null(input$fev1_0) || input$fev1_0 == "" || is.null (input$age) || input$age == "" || is.null (input$sex) || input$sex == "" || is.null (input$height) || input$height == "") {
+    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "")) {
       shinyjs::disable("submit")
     }else{
       shinyjs::enable("submit")
