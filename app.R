@@ -54,10 +54,10 @@ ui <- fluidPage(
                  helpText("Enter as many patient characteristics as possible.",
                           "When all fields are completed, a validated model will make predictions.",
                           "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
-                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), value = NULL, min=1.25, max=3.55, step = 0.25),
-                 numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 62, step = 1),
+                 numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), value = NULL, min = 1, max = 5, step = 0.25),
+                 numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 100, step = 1),
                  selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = NULL),
-                 numericInput("height", labelMandatory("Height (cm)"),value = NULL, min = 147.3, max = 190.5,  step = 0.1),
+                 numericInput("height", labelMandatory("Height (cm)"),value = NULL, min = 100, max = 250,  step = 0.1),
                  icon("glass"),
                  a(id = "toggleLifeStyle", "LifeStyle", href = "#"),
                  shinyjs::hidden(
@@ -73,7 +73,7 @@ ui <- fluidPage(
                  a(id = "toggleSymptomsTreatments", "Symptoms & Treatments", href = "#"),
                  shinyjs::hidden(
                    div(id = "SymptomsTreatments",
-                       numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 4, max = 16, step = 1),
+                       numericInput("qrs","QRS interval (0.01 sec)",value = NULL, min = 2, max = 20, step = 1),
                        selectInput("ba_use", "Bronchodilator or inhaler", list('','Current use', 'Former use', 'No use'), selected = ''),
                        selectInput("dys_exer", "Dyspnea on exertion", list('','Yes, on walking up stairs or other vigorous excercise','Yes, on rapid walking or other moderderate exercise','On any slight exertion','No'), selected = ''),
                        selectInput("noc_s","Nocturnal symptoms",list('','Yes', 'No'),selected = '')
@@ -101,11 +101,29 @@ ui <- fluidPage(
       
       br(),
       br(),
+      shinyjs::hidden(
+        div(id = "FEV1_range",
+            HTML(paste(tags$span(style="color:red", "FEV1 must be between 1L and 5L")))
+        )
+      ),
+      shinyjs::hidden(
+        div(id = "age_range",
+            HTML(paste(tags$span(style="color:red", "age must be between 20 and 100")))
+        )
+      ),
+      shinyjs::hidden(
+        div(id = "height_range",
+            HTML(paste(tags$span(style="color:red", "height must be between 100cm and 250cm")))
+        )
+      ),
+      shinyjs::hidden(
+        div(id = "qrs_range",
+            HTML(paste(tags$span(style="color:red", "QRS (0.01s) out of range ")))
+        )
+      ),
       actionButton("submit", "Run the prediction model"),
       actionButton("clear_inputs_button", "Reset")
-      
-      #submitButton("xx")
-    ),
+      ),
      
 
     mainPanel(
@@ -137,13 +155,7 @@ server <- function(input, output, session) {
   errorLineColor <- "darkcyan"
   buttonremove <- list("sendDataToCloud", "lasso2d", "pan2d" , "zoom2d", "hoverClosestCartesian")
   
-  interventionTitle <- paste0('If the patient is going to use a new intervention,\n',
-                              'please indicate the effect of the new intervention\n',
-                              'relative to his/her current therapy on initial\n',
-                              'improvement in lung function (L).\n',
-                              'If you only want to model the natural course of\n',
-                              'disease progression irrespective of specific intervention,\n',
-                              'please select 0 in here.')
+
   inputOption <- c("baseline information", 
                     "Risk Factors",
                     "Symptoms & Treatments",
@@ -169,7 +181,39 @@ server <- function(input, output, session) {
     }
   })  
   
-
+  observe({
+    if (!is.na(input$fev1_0) && (input$fev1_0!="")) {
+      if ((input$fev1_0 < 1)  || (input$fev1_0 > 5))  {
+        shinyjs::show (id = "FEV1_range", anim = TRUE)}
+      else shinyjs::hide (id = "FEV1_range", anim = TRUE)
+    }
+  })    
+  
+  observe({
+    if (!is.na(input$age) && (input$age!="")) {
+      if ((input$age < 20)  || (input$age > 100))  {
+           shinyjs::show (id = "age_range", anim = TRUE)}
+      else shinyjs::hide (id = "age_range", anim = TRUE)
+    }
+  })  
+  
+  observe({
+    if (!is.na(input$height) && (input$height!="")) {
+      if ((input$height < 100)  || (input$height > 250))  {
+        shinyjs::show (id = "height_range", anim = TRUE)}
+      else shinyjs::hide (id = "height_range", anim = TRUE)
+    }
+  })  
+  
+  
+  observe({
+    if (!is.na(input$qrs) && (input$qrs!="")) {
+      if ((input$qrs < 2)  || (input$qrs > 20))  {
+        shinyjs::show (id = "height_qrs", anim = TRUE)}
+      else shinyjs::hide (id = "height_qrs", anim = TRUE)
+    }
+  })  
+  
   # Output Functions-----------------------------------------------------------------------------------------------------------
   
   output$inputParam<-renderUI({
