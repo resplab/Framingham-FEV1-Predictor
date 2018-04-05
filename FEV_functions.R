@@ -147,39 +147,6 @@ FEV_calculate_lmer_fn<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,u
   #####################################
   #STEP0: Prepare the data(Chen's code)
   #####################################
-  #load("analysis4.rdata")	#this command loads the workspace, can change to other directly if analysis4.rdata is saved somewhere else
-  # data_mi2 <- readRDS("./data_mi2.rds") #load reduced size file
-  # 
-  # A13.new<-0.295*data_mi2[,"A13"]
-  # data_rf<-cbind.data.frame(data_mi2,A13.new)	#this is the original dataset with 126 variables
-  # #From the original dataset, we will only select predictors for our final model and the two outcomes
-  # data_rf2<-subset(data_rf, select=c(RANDOMID,visit,fev1,fev1_fvc,age,sex,A13.new,A28,A35,A36,A38,A112,A113,
-  #                                    A138,A147,A182,cpackyr,height2,year, year2,smoke,A86,A126,A131))
-  # data_rf2$sex<-as.factor(data_rf2$sex) #Sex needs to be converted into a factor variable instead of continuous
-  # #change the variable names for all the "Axx" variables
-  # colnames(data_rf2)[7:16]<-c("triglycerides","hematocrit","albumin","globulin","ALP","wine","cocktail",
-  #                             "WBC","QRS_intv","alcohol_indx")
-  # colnames(data_rf2)[22:24]<-c("broncho","dyspnea_exc","night_sym")
-  # 
-  # data.num<-subset(data_rf2, select=c(3:5,7:16,18))	#create a dataset with only continuous variables, including outcomes (except for cpackyr, year, year2)
-  # data.num2<-scale(data.num, center = TRUE, scale = TRUE)	#center and scale these variables and create a new dataset
-  # 
-  # data.cha<-subset(data_rf2, select=-c(3:5,7:16,18))  #create a dataset with the rest of uncentered variables
-  # data_rf4<-cbind(data.cha,data.num2)		#combine the centered/scaled variables with the rest variables to create the regression dataset
-  # 
-  # max<-data.table(data_rf4)[ , list(visit = max(visit)), by =RANDOMID]  #Label the last visit of each participant (note: they should attent visit 1, 2, 5 and 6)
-  # colnames(max)[2]<-'max'		# Name this variable as "max" - the last visit
-  # 
-  # data_rf4<-join(data_rf4,max,by='RANDOMID',type='right', match='all')	#Add the "max" variable to our regression dataset;
-  # data_rf4$status<-as.numeric(data_rf4$max<6 & data_rf4$max==data_rf4$visit)
-  # data_rf4$max<-NULL   #we then drop variable "max", because it is no longer needed
-  # 
-  # data_rf4$agecat[data_rf4$age>=65]<- 4
-  # data_rf4$agecat[data_rf4$age<65 & data_rf4$age>=50]<-3
-  # data_rf4$agecat[data_rf4$age<50 & data_rf4$age>=35]<-2
-  # data_rf4$agecat[data_rf4$age<35 & data_rf4$age>=20]<-1
-  # 
-  # data_rf4$agecat<-as.factor(data_rf4$agecat)	# Add age category to our data
 
   data_rf4 <- readRDS("./data_rf4.rds") #load reduced size file
   
@@ -223,7 +190,7 @@ make_predictions <- function(lmfin, predictors) {
   predictors$RANDOMID<-1
 
   # Create age category
-  predictors$agecat[predictors$age>=65]<-4
+  predictors$agecat[predictors$age>=65]<- 4
   # Wenjia: please test if age=67 works, if not, set agecat<-Null if age>=65
 
   predictors$agecat[predictors$age<65 & predictors$age>=50]<-3
@@ -333,6 +300,8 @@ make_predictions <- function(lmfin, predictors) {
   #data_pred$alcohol_indx <- 0.444*predictors$beer+0.400*predictors$wine+0.570*predictors$cocktail
 
   # Prediction;
+  print(colnames(data_pred))#debug amin
+  
   pred<-lme4:::predict.merMod(object=lmfin,newdata=data_pred,re.form=NA, allow.new.levels=TRUE) #JK:predict is a generic function for predictions from the results of various model fitting functions.
  
   
@@ -376,6 +345,9 @@ make_predictions <- function(lmfin, predictors) {
   data_pred_fin$lowerbound[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
   data_pred_fin$upperbound[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
   
+  #removin untransfromed FEV10 from the dataframme
+  data_pred_fin = subset(data_pred_fin, select = -c(fev1_0) )
+  
   #calculating %predicted FEV1, sex == 1 male. sex == 1 female. Following the NHANES-III algorithm, using 25y/o white Caucasian as reference,for people aged 20 years and above
   if   (predictors$sex == 1) { 
   data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
@@ -418,41 +390,7 @@ FEV_calculate_coefficients<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFR
   #####################################
   #STEP0: Prepare the data(Chen's code)
   #####################################
-  #load("analysis4.rdata")	#this command loads the workspace, can change to other directly if analysis4.rdata is saved somewhere else
-  # 
-  # data_mi2 <- readRDS("./data_mi2.rds") #load reduced size file
-  # 
-  # A13.new<-0.295*data_mi2[,"A13"]
-  # data_rf<-cbind.data.frame(data_mi2,A13.new)	#this is the original dataset with 126 variables
-  # #From the original dataset, we will only select predictors for our final model and the two outcomes
-  # data_rf2<-subset(data_rf, select=c(RANDOMID,visit,fev1,fev1_fvc,age,sex,A13.new,A28,A35,A36,A38,A112,A113,
-  #                                    A138,A147,A182,cpackyr,height2,year, year2,smoke,A86,A126,A131))
-  # data_rf2$sex<-as.factor(data_rf2$sex) #Sex needs to be converted into a factor variable instead of continuous
-  # #change the variable names for all the "Axx" variables
-  # colnames(data_rf2)[7:16]<-c("triglycerides","hematocrit","albumin","globulin","ALP","wine","cocktail",
-  #                             "WBC","QRS_intv","alcohol_indx")
-  # colnames(data_rf2)[22:24]<-c("broncho","dyspnea_exc","night_sym")
-  # 
-  # data.num<-subset(data_rf2, select=c(3:5,7:16,18))	#create a dataset with only continuous variables, including outcomes (except for cpackyr, year, year2)
-  # data.num2<-scale(data.num, center = TRUE, scale = TRUE)	#center and scale these variables and create a new dataset
-  # 
-  # data.cha<-subset(data_rf2, select=-c(3:5,7:16,18))  #create a dataset with the rest of uncentered variables
-  # data_rf4<-cbind(data.cha,data.num2)		#combine the centered/scaled variables with the rest variables to create the regression dataset
-  # 
-  # max<-data.table(data_rf4)[ , list(visit = max(visit)), by =RANDOMID]  #Label the last visit of each participant (note: they should attent visit 1, 2, 5 and 6)
-  # colnames(max)[2]<-'max'		# Name this variable as "max" - the last visit
-  # 
-  # data_rf4<-join(data_rf4,max,by='RANDOMID',type='right', match='all')	#Add the "max" variable to our regression dataset;
-  # data_rf4$status<-as.numeric(data_rf4$max<6 & data_rf4$max==data_rf4$visit)
-  # data_rf4$max<-NULL   #we then drop variable "max", because it is no longer needed
-  # 
-  # 
-  # data_rf4$agecat[data_rf4$age>=65]<-4
-  # data_rf4$agecat[data_rf4$age<65 & data_rf4$age>=50]<-3
-  # data_rf4$agecat[data_rf4$age<50 & data_rf4$age>=35]<-2
-  # data_rf4$agecat[data_rf4$age<35 & data_rf4$age>=20]<-1
-  # data_rf4$agecat<-as.factor(data_rf4$agecat)	# Add age category to our data
-  # 
+  
   data_rf4 <- readRDS("./data_rf4.rds") #load reduced size file
   
   
