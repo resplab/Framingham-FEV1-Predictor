@@ -369,23 +369,23 @@ make_predictions <- function(lmfin, predictors) {
 
   data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr,data_pred2$fev1_0,pred3,se3,lower3,upper3)
   data_pred_fin <- as.data.frame(data_pred_fin)
-  colnames(data_pred_fin)<-c("year","SmokeStatus","cpackyr","fev1_0","pred3","se3","lowerbound", "upperbound")
+  colnames(data_pred_fin)<-c("year","SmokeStatus","cpackyr","fev1_0","Predicted_FEV1","Predicted_SE","lowerbound", "upperbound")
   # Note: We used baseline FEV1 to predict future FEV1, so baseline FEV1 should be set to original value, se should be 0
-  data_pred_fin$pred3[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]*0.794445308+2.979447188 #backtransformed
-  data_pred_fin$se3[data_pred_fin$year==0]<-0
-  data_pred_fin$lowerbound[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
-  data_pred_fin$upperbound[data_pred_fin$year==0]<-data_pred_fin$pred3[data_pred_fin$year==0]
+  data_pred_fin$Predicted_FEV1[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]*0.794445308+2.979447188 #backtransformed
+  data_pred_fin$Predicted_SE[data_pred_fin$year==0]<-0
+  data_pred_fin$lowerbound[data_pred_fin$year==0]<-data_pred_fin$Predicted_FEV1[data_pred_fin$year==0]
+  data_pred_fin$upperbound[data_pred_fin$year==0]<-data_pred_fin$Predicted_FEV1[data_pred_fin$year==0]
   
   #calculating %predicted FEV1, sex == 1 male. sex == 1 female. Following the NHANES-III algorithm, using 25y/o white Caucasian as reference,for people aged 20 years and above
   if   (predictors$sex == 1) { 
-  data_pred_fin$percentpred <- 100 * data_pred_fin$pred3 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+  data_pred_fin$percentpred <- 100 * data_pred_fin$Predicted_FEV1 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
   data_pred_fin$percentpred_upper <- 100 * data_pred_fin$upperbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
   data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
   
   }
   
   if   (predictors$sex == 2) { 
-    data_pred_fin$percentpred <- 100 * data_pred_fin$pred3 / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+    data_pred_fin$percentpred <- 100 * data_pred_fin$Predicted_FEV1 / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
     data_pred_fin$percentpred_upper <- 100 * data_pred_fin$upperbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
     data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
     

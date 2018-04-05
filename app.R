@@ -453,7 +453,7 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-   ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
+   ggplotly(ggplot(prediction_results_toPlot, aes(year, Predicted_FEV1)) + geom_line(aes(y = Predicted_FEV1), color="black", linetype=1) +
                geom_ribbon(aes(ymin=lowerbound, ymax= upperbound), linetype=2, alpha=0.1) +
                geom_line(aes(y = lowerbound), color=errorLineColor, linetype=2) +
                geom_line(aes(y = upperbound), color=errorLineColor, linetype=2) +
