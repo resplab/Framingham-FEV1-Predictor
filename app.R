@@ -5,7 +5,6 @@ library(shiny)
 library(shinythemes)
 library(ggplot2)
 library(plotly)
-library(shinyjs)
 library(lme4) # to build linear mixed model
 library(lmerTest) # for outputing test results from the mixed model
 library(plyr) #for merging data
@@ -13,7 +12,6 @@ library(plyr) #for merging data
 #library(fBasics)
 #library(ROCR)
 #library(pROC)
-#library(ipw)
 library(data.table)
 library(rmarkdown) #for markdown file
 library(knitr) #for markdown file
@@ -89,12 +87,16 @@ ui <- fluidPage(
                        numericInput("trig","Triglycerides (mg/dl)",value = NULL, min = 1, max = 2000, step = 1),
                        numericInput("alb","Albumin (g/L)",value = NULL, min = 10, max = 100, step = 1),
                        numericInput("glob","Globulin (g/L)",value = NULL, min = 1, max = 100, step = 1),
-                       numericInput("alk_phos","Alkaline Phosphotase (IU/L)",value = NULL, min = 1, max = 200, step = 1),
-                       downloadButton("save_inputs_button", "Save Inputs"),
-                       fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs...")
-                   
-                   )
-       
+                       numericInput("alk_phos","Alkaline Phosphotase (IU/L)",value = NULL, min = 1, max = 200, step = 1)
+                 )
+                   ),
+                   br(), br(), icon("floppy-o"),"  ",
+                   a(id = "toggleSaveLoad", "Save/Load Inputs", href = "#"),
+                   shinyjs::hidden(
+                     div(id = "SaveLoad",
+                         downloadButton("save_inputs_button", "Save Inputs"),
+                         fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs...")
+                     )                 
       ),
 
       uiOutput('inputParam'),
@@ -176,6 +178,8 @@ server <- function(input, output, session) {
   shinyjs::onclick("toggleBloodTest",
                    shinyjs::toggle(id = "BloodTest", anim = TRUE)) 
   
+  shinyjs::onclick("toggleSaveLoad",
+                   shinyjs::toggle(id = "SaveLoad", anim = TRUE)) 
   
   observe({
     if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "")) {
