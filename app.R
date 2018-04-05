@@ -543,7 +543,7 @@ server <- function(input, output, session) {
         progress$set(message = "Extracting model parameters", value = 0.80)
         GLOBAL_lmer_model <<- lmer_function_output #could also be after lines 178-181
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
-        progress$set(message = "Plotting", value = 1.0)
+        progress$set(message = "Plotting", value = 0.9)
   
         output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
         
@@ -601,7 +601,6 @@ server <- function(input, output, session) {
         progress$set(message = "Plotting...", value = 0.90)
         
           output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
-          progress$set(message = "Done!", value = 1)
           
       }
        output$plot_FEV1_decline <- renderPlotly({
@@ -636,6 +635,8 @@ server <- function(input, output, session) {
      output$plot_FEV1_percentpred <- renderPlotly({
        print (FEV1_percent_pred_plot())
      })
+     progress$set(message = "Done!", value = 1)
+     
 }) 
  
 } #end of server <- function
