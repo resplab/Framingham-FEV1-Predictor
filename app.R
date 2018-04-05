@@ -426,10 +426,10 @@ server <- function(input, output, session) {
     write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
     
     #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
-    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 0)
+    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 0)
     
     #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
-    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 1)
+    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 1)
     
     #create prediction_results_toPlot dataframe
     #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
@@ -453,7 +453,7 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-   ggplotly(ggplot(prediction_results_toPlot, aes(year, Predicted_FEV1)) + geom_line(aes(y = Predicted_FEV1), color="black", linetype=1) +
+   ggplotly(ggplot(prediction_results_toPlot, aes(year, predicted_FEV1)) + geom_line(aes(y = predicted_FEV1), color="black", linetype=1) +
                geom_ribbon(aes(ymin=lowerbound, ymax= upperbound), linetype=2, alpha=0.1) +
                geom_line(aes(y = lowerbound), color=errorLineColor, linetype=2) +
                geom_line(aes(y = upperbound), color=errorLineColor, linetype=2) +
@@ -466,10 +466,10 @@ server <- function(input, output, session) {
   FEV1_percent_pred_plot <- reactive ({
 
     #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
-    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 0)
+    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 0)
     
     #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
-    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 1)
+    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 1)
     
     #create prediction_results_toPlot dataframe
     #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
@@ -489,7 +489,7 @@ server <- function(input, output, session) {
       titlefont = f
     )
     y <- list(
-      title = "Percent Predicted FEV1 (%)",
+      title = "Percent predicted FEV1 (%)",
       titlefont = f
     )
     
@@ -497,9 +497,9 @@ server <- function(input, output, session) {
                geom_ribbon(aes(ymin=percentpred_lower, ymax= percentpred_upper), linetype=2, alpha=0.1) +
                geom_line(aes(y = percentpred_lower), color=errorLineColor, linetype=2) +
                geom_line(aes(y = percentpred_upper), color=errorLineColor, linetype=2) +
-               #annotate("text", 1, 25, label="Percent Predicted FEV1", colour="black", size=4, hjust=0) +
+               #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
                #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
-               labs(x=xlab, y="FEV1 Percent Predicted (%)") +
+               labs(x=xlab, y="FEV1 Percent predicted (%)") +
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
   
