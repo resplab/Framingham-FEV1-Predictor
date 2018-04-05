@@ -95,7 +95,7 @@ ui <- fluidPage(
                    shinyjs::hidden(
                      div(id = "SaveLoad",
                          downloadButton("save_inputs_button", "Save Inputs"),
-                         fileInput("load_inputs_button","Choose CSV File to Load",accept = c("text/csv","text/comma-separated-values,text/plain",".csv"),buttonLabel = "Load Inputs...")
+                         fileInput("load_inputs_button","Choose CSV File to Load", accept = c("text/csv","text/comma-separated-values,text/plain",".csv"), buttonLabel = "Load Inputs...")
                      )                 
       ),
 
@@ -311,7 +311,7 @@ server <- function(input, output, session) {
   #Save Inputs button - prompts user to save inputs to a csv file
   output$save_inputs_button <- downloadHandler(
     filename = function() {
-      paste("FEV_input", ".csv", sep = "")
+      paste("FEV_input-", Sys.Date(), ".csv", sep = "")
     },
 
     content = function(file) {
