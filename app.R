@@ -457,8 +457,8 @@ server <- function(input, output, session) {
                geom_ribbon(aes(ymin=lowerbound, ymax= upperbound), linetype=2, alpha=0.1) +
                geom_line(aes(y = lowerbound), color=errorLineColor, linetype=2) +
                geom_line(aes(y = upperbound), color=errorLineColor, linetype=2) +
-               annotate("text", 1, 3.52, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
-               annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+               #annotate("text", 1, 0.5, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
+               #annotate("text", 1.15, 0.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y=ylab) +
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
@@ -497,10 +497,9 @@ server <- function(input, output, session) {
                geom_ribbon(aes(ymin=percentpred_lower, ymax= percentpred_upper), linetype=2, alpha=0.1) +
                geom_line(aes(y = percentpred_lower), color=errorLineColor, linetype=2) +
                geom_line(aes(y = percentpred_upper), color=errorLineColor, linetype=2) +
-               annotate("text", 1, 3.52, label="Percent Predicted FEV1", colour="black", size=4, hjust=0) +
-               annotate("text", 1.15, 3.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+               #annotate("text", 1, 25, label="Percent Predicted FEV1", colour="black", size=4, hjust=0) +
+               #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y="FEV1 Percent Predicted (%)") +
-               ylim(50, 100) +
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
   
