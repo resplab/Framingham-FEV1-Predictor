@@ -362,12 +362,18 @@ make_predictions <- function(lmfin, predictors) {
     data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
     
     }
-  # data_smoker <- subset(data_pred_fin, smoking == 1)
-  # data_non_smoker <- subset(data_pred_fin, smoking == 0)
-  # 
-  # data_pred_fin$predicted_FEV1_smoker <- data_smoker$predicted_FEV1
-  # data_pred_fin$predicted_FEV1_non_smoker <- data_non_smoker$predicted_FEV1
-  
+   # data_smoker <- subset(data_pred_fin, smk == 1)
+   # data_non_smoker <- subset(data_pred_fin, smk == 0)
+   # 
+   # data_pred_fin$predicted_FEV1_smoker <- data_smoker$predicted_FEV1
+   # data_pred_fin$lowerbound_smoker <- data_smoker$lowerbound
+   # data_pred_fin$upperbound_smoker <- data_smoker$upperbound
+   # 
+   # 
+   # data_pred_fin$predicted_FEV1_non_smoker <- data_non_smoker$predicted_FEV1
+   # data_pred_fin$lowerbound_non_smoker <- data_non_smoker$lowerbound
+   # data_pred_fin$upperbound_non_smoker <- data_non_smoker$upperbound
+   # 
   #return(data_pred) #debug Amin. TODO
   return(data_pred_fin)
 }
