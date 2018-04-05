@@ -63,7 +63,7 @@ ui <- fluidPage(
                        numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
                        numericInput("beer","Beer intake (cans or bottles/wk)", value = NULL, min = 0, max = 50, step = 1),
                        numericInput("wine","Wine intake (glasses/wk)", value = NULL, min = 0,step = 1),
-                       numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1)
+                       numericInput("cocktail","Liquor/spirits intake (drinks/wk)", value = NULL, min = 0, step = 1)
                    )
                  ),
                  br(), icon("stethoscope"),
