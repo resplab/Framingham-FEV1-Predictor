@@ -506,10 +506,16 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    ggplotly(ggplot(prediction_results, aes(year, percentpred)) + geom_line(aes(y = percentpred), color="black", linetype=1) +
-               geom_ribbon(aes(ymin=percentpred_lower, ymax= percentpred_upper), linetype=2, alpha=0.1) +
-               geom_line(aes(y = percentpred_lower), color=errorLineColor, linetype=2) +
-               geom_line(aes(y = percentpred_upper), color=errorLineColor, linetype=2) +
+    ggplotly(ggplot(prediction_results, aes(year)) + geom_line(aes(y = percentpred_smoker), color=lineColorSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=percentpred_lowerbound_smoker, ymax= percentpred_upperbound_smoker), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+               geom_line(aes(y = percentpred_lowerbound_smoker), color=errorLineColorSmoker, linetype=2) +
+               geom_line(aes(y = percentpred_upperbound_smoker), color=errorLineColorSmoker, linetype=2) +
+               
+               geom_line(aes(y = percentpred_non_smoker), color=lineColorNonSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=percentpred_lowerbound_non_smoker, ymax= percentpred_upperbound_non_smoker), linetype=2, alpha=0.1) +
+               geom_line(aes(y = percentpred_lowerbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+               geom_line(aes(y = percentpred_upperbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+               
                #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
                #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y="FEV1 Percent predicted (%)") +

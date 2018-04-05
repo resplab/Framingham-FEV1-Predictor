@@ -358,17 +358,18 @@ make_predictions <- function(lmfin, predictors) {
   
   if   (predictors$sex == 2) { 
     data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-    data_pred_fin$percentpred_upper <- 100 * data_pred_fin$upperbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-    data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+    data_pred_fin$percentpred_upperbound <- 100 * data_pred_fin$upperbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+    data_pred_fin$percentpred_lowerbound <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
     
     }
     data_smoker <- subset(data_pred_fin, smoking == 1)
     data_non_smoker <- subset(data_pred_fin, smoking == 0)
     
-    #reducing rows
+    #reducing rows in data_pred_fin
     data_pred_fin <- subset(data_pred_fin, smoking == 0)
-    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, predicted_FEV1))
+    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, predicted_FEV1, upperbound, lowerbound, percentpred, percentpred_upperbound, percentpred_lowerbound))
     
+    #adding coloumns for smoking vs. quitting scenario
     data_pred_fin$predicted_FEV1_smoker <- data_smoker$predicted_FEV1
     data_pred_fin$lowerbound_smoker <- data_smoker$lowerbound
     data_pred_fin$upperbound_smoker <- data_smoker$upperbound
@@ -377,6 +378,17 @@ make_predictions <- function(lmfin, predictors) {
     data_pred_fin$predicted_FEV1_non_smoker <- data_non_smoker$predicted_FEV1
     data_pred_fin$lowerbound_non_smoker <- data_non_smoker$lowerbound
     data_pred_fin$upperbound_non_smoker <- data_non_smoker$upperbound
+    
+    #same for percentpred
+    data_pred_fin$percentpred_smoker <- data_smoker$percentpred
+    data_pred_fin$percentpred_lowerbound_smoker <- data_smoker$percentpred_lowerbound
+    data_pred_fin$percentpred_upperbound_smoker <- data_smoker$percentpred_upperbound
+    
+    
+    data_pred_fin$percentpred_non_smoker <- data_non_smoker$percentpred
+    data_pred_fin$percentpred_lowerbound_non_smoker <- data_non_smoker$percentpred_lowerbound
+    data_pred_fin$percentpred_upperbound_non_smoker <- data_non_smoker$percentpred_upperbound
+    
     
   #return(data_pred) #debug Amin. TODO
   return(data_pred_fin)
