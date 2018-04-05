@@ -214,10 +214,10 @@ make_predictions <- function(lmfin, predictors) {
 
   #Wenjia: this is the coding of categories in the Framingham data
   # Create dyspnea category
-  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='On rigorous exercise'] <- 1
-  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='On moderate exercise'] <- 2
-  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='On slight exertion'] <- 3
-  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='No dyspnea on ex.'] <- 0
+  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='Yes, on walking up stairs or other vigorous excercise'] <- 1
+  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='Yes, on rapid walking or other moderderate exercise'] <- 2
+  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='On any slight exertion'] <- 3
+  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='No'] <- 0
   predictors$dyspnea_exc <- as.factor(predictors$dyspnea_exc_cat)
 
   # Wenjia: this is the coding of categories in Framingham
@@ -362,18 +362,22 @@ make_predictions <- function(lmfin, predictors) {
     data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
     
     }
-   # data_smoker <- subset(data_pred_fin, smk == 1)
-   # data_non_smoker <- subset(data_pred_fin, smk == 0)
-   # 
-   # data_pred_fin$predicted_FEV1_smoker <- data_smoker$predicted_FEV1
-   # data_pred_fin$lowerbound_smoker <- data_smoker$lowerbound
-   # data_pred_fin$upperbound_smoker <- data_smoker$upperbound
-   # 
-   # 
-   # data_pred_fin$predicted_FEV1_non_smoker <- data_non_smoker$predicted_FEV1
-   # data_pred_fin$lowerbound_non_smoker <- data_non_smoker$lowerbound
-   # data_pred_fin$upperbound_non_smoker <- data_non_smoker$upperbound
-   # 
+    data_smoker <- subset(data_pred_fin, smoking == 1)
+    data_non_smoker <- subset(data_pred_fin, smoking == 0)
+    
+    #reducing rows
+    data_pred_fin <- subset(data_pred_fin, smoking == 0)
+    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, predicted_FEV1))
+    
+    data_pred_fin$predicted_FEV1_smoker <- data_smoker$predicted_FEV1
+    data_pred_fin$lowerbound_smoker <- data_smoker$lowerbound
+    data_pred_fin$upperbound_smoker <- data_smoker$upperbound
+    
+    
+    data_pred_fin$predicted_FEV1_non_smoker <- data_non_smoker$predicted_FEV1
+    data_pred_fin$lowerbound_non_smoker <- data_non_smoker$lowerbound
+    data_pred_fin$upperbound_non_smoker <- data_non_smoker$upperbound
+    
   #return(data_pred) #debug Amin. TODO
   return(data_pred_fin)
 }
