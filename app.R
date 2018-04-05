@@ -48,7 +48,6 @@ ui <- fluidPage(
   sidebarLayout(
 
     sidebarPanel(
-
                  helpText("Enter as many patient characteristics as possible.",
                           "When all fields are completed, a validated model will make predictions.",
                           "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
@@ -130,18 +129,26 @@ ui <- fluidPage(
 
     mainPanel(
       tabsetPanel(type="tabs",
-                  tabPanel("FEV1 Decline",
+                  tabPanel("FEV1",
                            plotlyOutput("plot_FEV1_decline"),
-                           plotlyOutput("plot_FEV1_percentpred")
+                           br(),
+                           tableOutput("table_FEV1_decline")
+            
+                           ),
+                  
+                  tabPanel("FEV1 % Predicted",
+                           plotlyOutput("plot_FEV1_percentpred"),
+                           br(),
+                           tableOutput("table_FEV1_percentpred")
                   ),
                   
                   tabPanel("COPD Risk",
                            plotlyOutput("COPD_risk")
                   ),
 
-                  tabPanel("Model Summary",
-                           verbatimTextOutput("lmer_summary")),
-                  #tabPanel("Resources",  includeMarkdown("resources.Rmd")),
+                  # tabPanel("Model Summary",
+                  #          verbatimTextOutput("lmer_summary")),
+                  
                   tabPanel("Disclaimer",  includeMarkdown("./disclaimer.rmd")),
                   tabPanel("About",  includeMarkdown("./about.rmd"))
                   #textOutput("binary") #for debug; monitoring binary value. Amin
@@ -455,7 +462,7 @@ server <- function(input, output, session) {
                labs(x=xlab, y=ylab) +
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
-
+     
   FEV1_percent_pred_plot <- reactive ({
 
     #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
@@ -497,6 +504,7 @@ server <- function(input, output, session) {
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
   
+     
      observeEvent(input$submit, {
       # Create a Progress object
       progress <- shiny::Progress$new()
@@ -582,11 +590,35 @@ server <- function(input, output, session) {
          print (FEV1_plot())
        })
        
+       output$table_FEV1_decline<-renderTable({
+         # rownames(aa1)<-c("Mean FEV1", "95% credible interval-upper bound", "95% credible interval-lower bound",
+         #                  "Coefficient of Variation (CV) (%)")
+         # colnames(aa1)<- years
+         
+         return(prediction_results)
+       },
+       include.rownames=T,
+       caption="FEV1 Heterogeneity",
+       caption.placement = getOption("xtable.caption.placement", "top"))
        output$plot_FEV1_percentpred <- renderPlotly({
          print (FEV1_percent_pred_plot())
        })
-    }) 
+   
      
+     output$table_FEV1_percentpred<-renderTable({
+       # rownames(aa1)<-c("Mean FEV1", "95% credible interval-upper bound", "95% credible interval-lower bound",
+       #                  "Coefficient of Variation (CV) (%)")
+       # colnames(aa1)<- years
+       
+       return(prediction_results)
+     },
+     include.rownames=T,
+     caption="FEV1 Heterogeneity",
+     caption.placement = getOption("xtable.caption.placement", "top"))
+     output$plot_FEV1_percentpred <- renderPlotly({
+       print (FEV1_percent_pred_plot())
+     })
+}) 
  
 } #end of server <- function
 
