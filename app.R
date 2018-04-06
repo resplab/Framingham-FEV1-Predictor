@@ -63,7 +63,7 @@ ui <- fluidPage(
                        numericInput("smoke_year","Years smoking", value = NULL, min = 0, max = 50, step = 1),
                        numericInput("beer","Beer intake (cans or bottles/wk)", value = NULL, min = 0, max = 50, step = 1),
                        numericInput("wine","Wine intake (glasses/wk)", value = NULL, min = 0,step = 1),
-                       numericInput("cocktail","Cocktail intake (drinks/wk)", value = NULL, min = 0, step = 1)
+                       numericInput("cocktail","Liquor/spirits intake (drinks/wk)", value = NULL, min = 0, step = 1)
                    )
                  ),
                  br(), icon("stethoscope"),
@@ -146,8 +146,8 @@ ui <- fluidPage(
                            plotlyOutput("COPD_risk")
                   ),
 
-                  # tabPanel("Model Summary",
-                  #          verbatimTextOutput("lmer_summary")),
+                  tabPanel("Model Summary",
+                            verbatimTextOutput("lmer_summary")),
                   
                   tabPanel("Disclaimer",  includeMarkdown("./disclaimer.rmd")),
                   tabPanel("About",  includeMarkdown("./about.rmd"))
@@ -166,6 +166,11 @@ server <- function(input, output, session) {
   xlab="Time (years)"
   ylab="FEV1 (L)"
   errorLineColor <- "darkcyan"
+  errorLineColorSmoker <- "salmon"
+  errorLineColorNonSmoker <- "darkcyan"
+  lineColorSmoker <- "red"
+  lineColorNonSmoker <- "dodgerblue4"
+  
   buttonremove <- list("sendDataToCloud", "lasso2d", "pan2d" , "zoom2d", "hoverClosestCartesian")
   
 
@@ -426,10 +431,10 @@ server <- function(input, output, session) {
     write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
     
     #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
-    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 0)
+    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 0)
     
     #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
-    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 1)
+    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 1)
     
     #create prediction_results_toPlot dataframe
     #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
@@ -453,10 +458,16 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-   ggplotly(ggplot(prediction_results_toPlot, aes(year, pred3)) + geom_line(aes(y = pred3), color="black", linetype=1) +
-               geom_ribbon(aes(ymin=lowerbound, ymax= upperbound), linetype=2, alpha=0.1) +
-               geom_line(aes(y = lowerbound), color=errorLineColor, linetype=2) +
-               geom_line(aes(y = upperbound), color=errorLineColor, linetype=2) +
+   ggplotly(ggplot(prediction_results, aes(year)) + geom_line(aes(y = predicted_FEV1_smoker), color=lineColorSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=lowerbound_smoker, ymax= upperbound_smoker), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+               geom_line(aes(y = lowerbound_smoker), color=errorLineColorSmoker, linetype=2) +
+               geom_line(aes(y = upperbound_smoker), color=errorLineColorSmoker, linetype=2) +
+              
+               geom_line(aes(y = predicted_FEV1_non_smoker), color=lineColorNonSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=lowerbound_non_smoker, ymax= upperbound_non_smoker), linetype=2, alpha=0.1) +
+               geom_line(aes(y = lowerbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+               geom_line(aes(y = upperbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+              
                #annotate("text", 1, 0.5, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
                #annotate("text", 1.15, 0.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y=ylab) +
@@ -466,17 +477,19 @@ server <- function(input, output, session) {
   FEV1_percent_pred_plot <- reactive ({
 
     #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
-    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 0)
-    
-    #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
-    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$SmokeStatus == 1)
+    # prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 0)
+    # 
+    # print (prediction_results_QuitSmoke) 
+    # #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
+    # prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 1)
+    # 
     
     #create prediction_results_toPlot dataframe
     #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
     #if either "smoke_year" or "daily_cigs" is not NA, then use prediction_results_ContinueSmoke
-    if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
-    if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
-    
+    # if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
+    # if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
+    # 
     # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
     
     f <- list(
@@ -489,17 +502,23 @@ server <- function(input, output, session) {
       titlefont = f
     )
     y <- list(
-      title = "Percent Predicted FEV1 (%)",
+      title = "Percent predicted FEV1 (%)",
       titlefont = f
     )
     
-    ggplotly(ggplot(prediction_results_toPlot, aes(year, percentpred)) + geom_line(aes(y = percentpred), color="black", linetype=1) +
-               geom_ribbon(aes(ymin=percentpred_lower, ymax= percentpred_upper), linetype=2, alpha=0.1) +
-               geom_line(aes(y = percentpred_lower), color=errorLineColor, linetype=2) +
-               geom_line(aes(y = percentpred_upper), color=errorLineColor, linetype=2) +
-               #annotate("text", 1, 25, label="Percent Predicted FEV1", colour="black", size=4, hjust=0) +
+    ggplotly(ggplot(prediction_results, aes(year)) + geom_line(aes(y = percentpred_smoker), color=lineColorSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=percentpred_lowerbound_smoker, ymax= percentpred_upperbound_smoker), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+               geom_line(aes(y = percentpred_lowerbound_smoker), color=errorLineColorSmoker, linetype=2) +
+               geom_line(aes(y = percentpred_upperbound_smoker), color=errorLineColorSmoker, linetype=2) +
+               
+               geom_line(aes(y = percentpred_non_smoker), color=lineColorNonSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=percentpred_lowerbound_non_smoker, ymax= percentpred_upperbound_non_smoker), linetype=2, alpha=0.1) +
+               geom_line(aes(y = percentpred_lowerbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+               geom_line(aes(y = percentpred_upperbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+               
+               #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
                #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
-               labs(x=xlab, y="FEV1 Percent Predicted (%)") +
+               labs(x=xlab, y="FEV1 Percent predicted (%)") +
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
   
@@ -524,7 +543,7 @@ server <- function(input, output, session) {
         progress$set(message = "Extracting model parameters", value = 0.80)
         GLOBAL_lmer_model <<- lmer_function_output #could also be after lines 178-181
         GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
-        progress$set(message = "Plotting", value = 1.0)
+        progress$set(message = "Plotting", value = 0.9)
   
         output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
         
@@ -582,7 +601,6 @@ server <- function(input, output, session) {
         progress$set(message = "Plotting...", value = 0.90)
         
           output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
-          progress$set(message = "Done!", value = 1)
           
       }
        output$plot_FEV1_decline <- renderPlotly({
@@ -617,6 +635,8 @@ server <- function(input, output, session) {
      output$plot_FEV1_percentpred <- renderPlotly({
        print (FEV1_percent_pred_plot())
      })
+     progress$set(message = "Done!", value = 1)
+     
 }) 
  
 } #end of server <- function
