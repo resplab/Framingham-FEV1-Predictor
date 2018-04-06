@@ -143,7 +143,10 @@ ui <- fluidPage(
                   ),
                   
                   tabPanel("COPD Risk",
-                           plotlyOutput("COPD_risk")
+                           plotlyOutput("COPD_risk"),
+                           br(),
+                           tableOutput("table_COPD_risk")
+                           
                   ),
 
                   # tabPanel("Model Summary",
@@ -422,8 +425,8 @@ server <- function(input, output, session) {
     # STEP2: remove 'beer' from the predictors dataframe
     predictors[,'beer'] <- NULL
     
-    prediction_results <<- make_predictions(GLOBAL_fev1_lmer_model, predictors)
-    prediction_results_fev1_fvc <<- make_predictions(GLOBAL_fev1_fvc_lmer_model, predictors)
+    prediction_results <<- make_predictions('fev1', GLOBAL_fev1_lmer_model, predictors)
+    prediction_results_fev1_fvc <<- make_predictions('fev1_fvc', GLOBAL_fev1_fvc_lmer_model, predictors)
     
     #Next line: save output for unit test(comment out next line under normal operation)
     write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
@@ -625,8 +628,9 @@ server <- function(input, output, session) {
          return(prediction_results)
        },
        include.rownames=T,
-       caption="FEV1 Heterogeneity",
+       caption="FEV1 Projections",
        caption.placement = getOption("xtable.caption.placement", "top"))
+       
        output$plot_FEV1_percentpred <- renderPlotly({
          print (FEV1_percent_pred_plot())
        })
@@ -640,12 +644,23 @@ server <- function(input, output, session) {
        return(prediction_results)
      },
      include.rownames=T,
-     caption="FEV1 Heterogeneity",
+     caption="FEV1 Percent Predicted Projections",
      caption.placement = getOption("xtable.caption.placement", "top"))
+     
      output$plot_FEV1_percentpred <- renderPlotly({
        print (FEV1_percent_pred_plot())
      })
+     
+     output$table_COPD_risk<-renderTable({
+       return(prediction_results_fev1_fvc)
+     },
+     include.rownames=T,
+     caption="FEV1/FVC Prediction",
+     caption.placement = getOption("xtable.caption.placement", "top"))
+     
+     
      progress$set(message = "Done!", value = 1)
+     
      
 }) 
  
