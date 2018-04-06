@@ -142,7 +142,7 @@ buildformula_factors <- function(BINARY_CODE_DATAFRAME,FACTOR_NAMES_DATAFRAME){
 }
 
 
-FEV_calculate_lmer_fn<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,updateProgress = NULL){
+FEV_calculate_lmer_fn<- function(responseVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,updateProgress = NULL){
   #####################################
   #STEP0: Prepare the data(Chen's code)
   #####################################
@@ -175,7 +175,7 @@ FEV_calculate_lmer_fn<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,u
   formula_factors <- buildformula_factors(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
   #STEP4: use reformulate to build the full equation(can combine steps 3 and 4)
   # formula_factors <- c(formula_factors, "year", "year2", "(year|RANDOMID)") #NOTE: "year", "year2", "(year|RANDOMID)" are now all mapped to fev1_0 input
-  full_formula <- reformulate(formula_factors,response="fev1")
+  full_formula <- reformulate(formula_factors,response=responseVar)
   #STEP5: Use lmfin to compute the coefficients
   lmfin <- lmer(full_formula,data_rf4,weights=sw, REML=FALSE)
   return(lmfin)

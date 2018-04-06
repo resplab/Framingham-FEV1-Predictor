@@ -32,12 +32,12 @@ appCSS <-
 
 source('./FEV_functions.R')
 
-GLOBAL_lmer_model <- NULL
-GLOBAL_lmer_model_summary <- NULL
-GLOBAL_lmer_model_loaded_FLAG <- NULL
+GLOBAL_fev1_lmer_model <- NULL
+GLOBAL_fev1_lmer_model_summary <- NULL
+GLOBAL_fev1_lmer_model_loaded_FLAG <- NULL
 button_width <- 160
 
-# lmer_function_output_summary <- NULL
+# fev1_lmer_function_output_summary <- NULL
 ui <- fluidPage(
   shinyjs::useShinyjs(),
   shinyjs::inlineCSS(appCSS),
@@ -368,7 +368,7 @@ server <- function(input, output, session) {
   )
   
   FEV1_plot <- reactive ({
-    #req(GLOBAL_lmer_model_loaded_FLAG)
+    #req(GLOBAL_fev1_lmer_model_loaded_FLAG)
     
     predictors_data_frame <- predictors <- isolate(
       data.frame(
@@ -422,7 +422,8 @@ server <- function(input, output, session) {
     # STEP2: remove 'beer' from the predictors dataframe
     predictors[,'beer'] <- NULL
     
-    prediction_results <<- make_predictions(GLOBAL_lmer_model, predictors)
+    prediction_results <<- make_predictions(GLOBAL_fev1_lmer_model, predictors)
+    prediction_results_fev1_fvc <<- make_predictions(GLOBAL_fev1_fvc_lmer_model, predictors)
     
     #Next line: save output for unit test(comment out next line under normal operation)
     write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
@@ -527,30 +528,37 @@ server <- function(input, output, session) {
 
 
       #use collapse="" to get rid of spaces between 1s and 0s; use sep="" to get rid of space betweeen file name and ".rds"
-      full_file_name = paste("./",paste(file_name(),collapse=""),".rds",sep="")
+      fev1_full_file_name = paste("./",paste(file_name(), collapse=""), "-fev1", ".rds",sep="")
+      fev1_fvc_full_file_name = paste("./",paste(file_name(), collapse=""),"-fev1_fvc", ".rds",sep="")
+      
       # browser()
 
       #if file exists but model has not been loaded, load the model from the file
-      if(file.exists(full_file_name) && is.null(GLOBAL_lmer_model_loaded_FLAG)){
+      if(file.exists(fev1_full_file_name) && is.null(GLOBAL_fev1_lmer_model_loaded_FLAG)){
         progress$set(message = "Model found. Loading the model...", value = 0.50)
-        lmer_function_output <- readRDS(full_file_name)
+        fev1_lmer_function_output <- readRDS(fev1_full_file_name)
+        fev1_fvc_lmer_function_output <- readRDS(fev1_fvc_full_file_name)
+        
 
         #set the model-loaded-flag to TRUE
-        GLOBAL_lmer_model_loaded_FLAG <<- TRUE
+        GLOBAL_fev1_lmer_model_loaded_FLAG <<- TRUE
         progress$set(message = "Extracting model parameters", value = 0.80)
-        GLOBAL_lmer_model <<- lmer_function_output #could also be after lines 178-181
-       #GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
+        GLOBAL_fev1_lmer_model <<- fev1_lmer_function_output 
+        GLOBAL_fev1_fvc_lmer_model <<- fev1_fvc_lmer_function_output 
+        
+        #GLOBAL_fev1_lmer_model_summary <<- summary(fev1_lmer_function_output) #model summary is disabled for now
         progress$set(message = "Plotting", value = 0.9)
   
-        #output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
+        #output$lmer_summary <- renderPrint({ GLOBAL_fev1_lmer_model_summary }) #model summary is disabled for now
         
       }
       #if file exists and model has been loaded, then get the model from GLOBAL variable
-      else if(file.exists(full_file_name) && !is.null(GLOBAL_lmer_model_loaded_FLAG)){
-          output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
-      }
+      # else if(file.exists(fev1_full_file_name) && !is.null(GLOBAL_fev1_lmer_model_loaded_FLAG)){
+      #     output$lmer_summary <- renderPrint({GLOBAL_fev1_lmer_model_summary})
+      # }
+      
       #if file does not exist, then calculate lmer model and create file
-      else if(!file.exists(full_file_name)){
+      else if(!file.exists(fev1_full_file_name)){
         # browser()
         
         #BINARY_CODE_DATAFRAME
@@ -583,21 +591,26 @@ server <- function(input, output, session) {
         # saveRDS(BINARY_CODE_DATAFRAME,"FEV_calculate_lmer_fn_input1_BINARY_CODE_DATAFRAME.RDS")
         # saveRDS(FACTORS_NAMES_DATAFRAME,"FEV_calculate_lmer_fn_input2_FACTORS_NAMES_DATAFRAME.RDS")
         
-        lmer_function_output <- FEV_calculate_lmer_fn(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
-
+        fev1_lmer_function_output <- FEV_calculate_lmer_fn("fev1", BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
+        fev1_fvc_lmer_function_output <- FEV_calculate_lmer_fn("fev1_fvc", BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
+        
         #set the model-loaded-flag to TRUE
-        GLOBAL_lmer_model_loaded_FLAG <<- TRUE
+        GLOBAL_fev1_lmer_model_loaded_FLAG <<- TRUE
 
         progress$set(message = "Saving the model", value = 0.60)
-        saveRDS(lmer_function_output,file=full_file_name)
+        saveRDS(fev1_lmer_function_output, file=fev1_full_file_name)
+        saveRDS(fev1_fvc_lmer_function_output, file=fev1_fvc_full_file_name)
+        
         
         progress$set(message = "Loading the model, this might take a few minutes", value = 0.80)
-        GLOBAL_lmer_model <<- lmer_function_output #most important has to be after line 214
-        #GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
+        GLOBAL_fev1_lmer_model <<- fev1_lmer_function_output 
+        GLOBAL_fev1_fvc_lmer_model <<- fev1_fvc_lmer_function_output
+        
+        #GLOBAL_fev1_lmer_model_summary <<- summary(fev1_lmer_function_output)  #summary tab is disabled for now
         
         progress$set(message = "Plotting...", value = 0.90)
         
-          #output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
+          #output$lmer_summary <- renderPrint({GLOBAL_fev1_lmer_model_summary}) #summary tab is disabled for now
           
       }
        output$plot_FEV1_decline <- renderPlotly({
