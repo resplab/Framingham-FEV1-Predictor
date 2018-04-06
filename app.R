@@ -146,8 +146,8 @@ ui <- fluidPage(
                            plotlyOutput("COPD_risk")
                   ),
 
-                  tabPanel("Model Summary",
-                            verbatimTextOutput("lmer_summary")),
+                  # tabPanel("Model Summary",
+                  #           verbatimTextOutput("lmer_summary")),
                   
                   tabPanel("Disclaimer",  includeMarkdown("./disclaimer.rmd")),
                   tabPanel("About",  includeMarkdown("./about.rmd"))
@@ -422,10 +422,7 @@ server <- function(input, output, session) {
     # STEP2: remove 'beer' from the predictors dataframe
     predictors[,'beer'] <- NULL
     
-    
     prediction_results <<- make_predictions(GLOBAL_lmer_model, predictors)
-    
-    
     
     #Next line: save output for unit test(comment out next line under normal operation)
     write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
@@ -542,10 +539,10 @@ server <- function(input, output, session) {
         GLOBAL_lmer_model_loaded_FLAG <<- TRUE
         progress$set(message = "Extracting model parameters", value = 0.80)
         GLOBAL_lmer_model <<- lmer_function_output #could also be after lines 178-181
-        GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
+       #GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
         progress$set(message = "Plotting", value = 0.9)
   
-        output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
+        #output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
         
       }
       #if file exists and model has been loaded, then get the model from GLOBAL variable
@@ -596,11 +593,11 @@ server <- function(input, output, session) {
         
         progress$set(message = "Loading the model, this might take a few minutes", value = 0.80)
         GLOBAL_lmer_model <<- lmer_function_output #most important has to be after line 214
-        GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
+        #GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
         
         progress$set(message = "Plotting...", value = 0.90)
         
-          output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
+          #output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
           
       }
        output$plot_FEV1_decline <- renderPlotly({
