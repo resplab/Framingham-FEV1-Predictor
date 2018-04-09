@@ -188,7 +188,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
   predictors$RANDOMID<-1
 
   # Create age category
-  predictors$agecat[predictors$age>=65]<- 4
+  predictors$agecat[predictors$age>=65]<- 3
   # Wenjia: please test if age=67 works, if not, set agecat<-Null if age>=65
 
   predictors$agecat[predictors$age<65 & predictors$age>=50]<-3
@@ -228,6 +228,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
 
   # Center input predictors
   predictors$fev1_0[!is.na(predictors$fev1_0)]<-(predictors$fev1_0-2.979447188)/0.794445308 #WC: I centered all continuous predictors except for cum_smoke and year
+  predictors$fev1_fvc_0[!is.na(predictors$fev1_fvc_0)]<-(predictors$fev1_fvc_0-0.7904786)/0.09908784  
   predictors$triglycerides[!is.na(predictors$triglycerides)]<-(predictors$triglycerides-93.02984434)/79.628844
   predictors$hematocrit[!is.na(predictors$hematocrit)]<-(predictors$hematocrit-42.83871875)/3.770632403
   predictors$albumin[!is.na(predictors$albumin)]<-(predictors$albumin-46.7343477)/3.259360147
@@ -303,10 +304,15 @@ make_predictions <- function(respVar, lmfin, predictors) {
   #get predicted fev1 at baseline for calculation (pfev0)
   if (respVar == 'fev1') { 
     pfev0<-subset(data_pred2,year==0 &smk==0,select=c(RANDOMID,pred))
+    print(pfev0)  #debug amin
     colnames(pfev0)[2]<-"pfev0"
     data_pred2<-join(data_pred2,pfev0,by='RANDOMID', type='right',match='all')
+    
   } else if (respVar == 'fev1_fvc') {
-    pfev_fvc0<-subset(data_pred2,year==0,select=c(RANDOMID,pred)) 
+    print(data_pred2)  #debug amin
+    pfev_fvc0<-subset(data_pred2,year==0,select=c(RANDOMID,pred))
+    
+    print(pfev_fvc0)  #debug amin
     colnames(pfev_fvc0)[2]<-"pfev_fvc0"
     data_pred2<-join(data_pred2,pfev_fvc0,by='RANDOMID', type='right',match='all')
   }
@@ -350,8 +356,8 @@ make_predictions <- function(respVar, lmfin, predictors) {
     #calculating %predicted FEV1, sex == 1 male. sex == 1 female. Following the NHANES-III algorithm, using 25y/o white Caucasian as reference,for people aged 20 years and above
     if   (predictors$sex == 1) { 
     data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_upper <- 100 * data_pred_fin$upperbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_upperbound <- 100 * data_pred_fin$upperbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_lowerbound <- 100 * data_pred_fin$lowerbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
     
     }
     
@@ -389,6 +395,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_pred_fin$percentpred_upperbound_non_smoker <- data_non_smoker$percentpred_upperbound
       
   } else if (respVar == 'fev1_fvc') {
+    #print(data_pred2)  #debug amin
     pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_fvc_0-data_pred2$pfev_fvc0)/data_pred2$cov22
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
     
