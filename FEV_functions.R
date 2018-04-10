@@ -186,10 +186,14 @@ make_predictions <- function(respVar, lmfin, predictors) {
 
   #Add a RANDOMID to make predictions
   predictors$RANDOMID<-1
+  
+  if (respVar == 'fev1_fvc') {
+    predictors$fev1_fvc_0 <- 1.0
+  }
 
   # Create age category
   predictors$agecat[predictors$age>=65]<- 3
-  # Wenjia: please test if age=67 works, if not, set agecat<-Null if age>=65
+  # Extrapolationg 
 
   predictors$agecat[predictors$age<65 & predictors$age>=50]<-3
   predictors$agecat[predictors$age<50 & predictors$age>=35]<-2
@@ -228,7 +232,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
 
   # Center input predictors
   predictors$fev1_0[!is.na(predictors$fev1_0)]<-(predictors$fev1_0-2.979447188)/0.794445308 #WC: I centered all continuous predictors except for cum_smoke and year
-  predictors$fev1_fvc_0[!is.na(predictors$fev1_fvc_0)]<-(predictors$fev1_fvc_0-0.7904786)/0.09908784  
+  if (respVar == 'fev1_fvc') predictors$fev1_fvc_0[!is.na(predictors$fev1_fvc_0)]<-(predictors$fev1_fvc_0-0.7904786)/0.09908784  
   predictors$triglycerides[!is.na(predictors$triglycerides)]<-(predictors$triglycerides-93.02984434)/79.628844
   predictors$hematocrit[!is.na(predictors$hematocrit)]<-(predictors$hematocrit-42.83871875)/3.770632403
   predictors$albumin[!is.na(predictors$albumin)]<-(predictors$albumin-46.7343477)/3.259360147
@@ -254,7 +258,6 @@ make_predictions <- function(respVar, lmfin, predictors) {
   year<-cbind(year,year2)
 
   data_pred<-merge(predictors,year,all=TRUE)
-
   #Now I will create two scenario for 20-year prediction of FEV1 decline
   #Scenario 1: quit smoke today (smk=0)
   #Scenario 2: continue to smoke at current speed (smk=1)
@@ -303,16 +306,16 @@ make_predictions <- function(respVar, lmfin, predictors) {
 
   #get predicted fev1 at baseline for calculation (pfev0)
   if (respVar == 'fev1') { 
-    pfev0<-subset(data_pred2,year==0 &smk==0,select=c(RANDOMID,pred))
-    print(pfev0)  #debug amin
+    pfev0<-subset(data_pred2,year==0 & smk==0,select=c(RANDOMID,pred))
+   # print(pfev0)  #debug amin
     colnames(pfev0)[2]<-"pfev0"
     data_pred2<-join(data_pred2,pfev0,by='RANDOMID', type='right',match='all')
     
   } else if (respVar == 'fev1_fvc') {
-    print(data_pred2)  #debug amin
-    pfev_fvc0<-subset(data_pred2,year==0,select=c(RANDOMID,pred))
+    #print(data_pred2)  #debug amin
+    pfev_fvc0<-subset(data_pred2,year==0 & smk==0,select=c(RANDOMID,pred))
     
-    print(pfev_fvc0)  #debug amin
+    #print(pfev_fvc0)  #debug amin
     colnames(pfev_fvc0)[2]<-"pfev_fvc0"
     data_pred2<-join(data_pred2,pfev_fvc0,by='RANDOMID', type='right',match='all')
   }
@@ -395,13 +398,17 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_pred_fin$percentpred_upperbound_non_smoker <- data_non_smoker$percentpred_upperbound
       
   } else if (respVar == 'fev1_fvc') {
-    #print(data_pred2)  #debug amin
+    #print(data_pred2$fev1_fvc_0)  #debug amin
     pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_fvc_0-data_pred2$pfev_fvc0)/data_pred2$cov22
+    #print(pred2)  #debug amin
+  
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
     
     prob<-pnorm(((0.7-0.7904786)/0.09908784-pred2)/se2)
     
-    data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cum_smoke,data_pred2$fev1_fvc_0,prob)
+    print (data_pred2)
+    data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob)
+    colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","PredictedProbablityofHavingCOPD")
     
   }
       
@@ -410,213 +417,6 @@ make_predictions <- function(respVar, lmfin, predictors) {
 }
 
 
-
-make_predictions_COPD_risk <- function(lmfin, predictors) {
-  
-  #Add a RANDOMID to make predictions
-  predictors$RANDOMID<-1
-  
-  predictors$fev1_fvc_0 <- 1.0
-  
-  # Create age category
-  predictors$agecat[predictors$age>=65]<- 4
-  # Wenjia: please test if age=67 works, if not, set agecat<-Null if age>=65
-  
-  predictors$agecat[predictors$age<65 & predictors$age>=50]<-3
-  predictors$agecat[predictors$age<50 & predictors$age>=35]<-2
-  predictors$agecat[predictors$age<35 & predictors$age>=20]<-1
-  predictors$agecat <- as.factor(predictors$agecat)
-  
-  # Create sex category
-  predictors$sexcat[predictors$sex=='male'] <- 1
-  predictors$sexcat[predictors$sex=='female'] <- 2
-  # predictors$sexcat<-as.factor(predictors$sexcat)
-  predictors$sex <- as.factor(predictors$sexcat)
-  
-  #Wenjia: this is the category that we use
-  #Create broncho category
-  predictors$bronchocat[predictors$broncho=='Current use'] <- 1
-  predictors$bronchocat[predictors$broncho=='Former use'] <- 2
-  predictors$bronchocat[predictors$broncho=='No use'] <- 0
-  predictors$broncho <- as.factor(predictors$bronchocat)
-  
-  
-  #Wenjia: this is the coding of categories in the Framingham data
-  # Create dyspnea category
-  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='Yes, on walking up stairs or other vigorous excercise'] <- 1
-  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='Yes, on rapid walking or other moderderate exercise'] <- 2
-  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='On any slight exertion'] <- 3
-  predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='No'] <- 0
-  predictors$dyspnea_exc <- as.factor(predictors$dyspnea_exc_cat)
-  
-  # Wenjia: this is the coding of categories in Framingham
-  # Create night symptoms category
-  predictors$night_sym_cat[predictors$night_sym=='Yes'] <- 4
-  predictors$night_sym_cat[predictors$night_sym=='Maybe'] <- 5
-  predictors$night_sym_cat[predictors$night_sym=='No'] <- 3
-  predictors$night_sym <- as.factor(predictors$night_sym_cat)
-  
-  
-  # Center input predictors
-  predictors$fev1_0[!is.na(predictors$fev1_0)]<-(predictors$fev1_0-2.979447188)/0.794445308 #WC: I centered all continuous predictors except for cum_smoke and year
-  predictors$fev1_fvc_0[!is.na(predictors$fev1_fvc_0)]<-(predictors$fev1_fvc_0-0.7904786)/0.09908784 
-  predictors$triglycerides[!is.na(predictors$triglycerides)]<-(predictors$triglycerides-93.02984434)/79.628844
-  predictors$hematocrit[!is.na(predictors$hematocrit)]<-(predictors$hematocrit-42.83871875)/3.770632403
-  predictors$albumin[!is.na(predictors$albumin)]<-(predictors$albumin-46.7343477)/3.259360147
-  predictors$globulin[!is.na(predictors$globulin)]<-(predictors$globulin-25.90719409)/3.530116396
-  predictors$ALP[!is.na(predictors$ALP)]<-(predictors$ALP-56.64908166)/16.30523751
-  predictors$WBC[!is.na(predictors$WBC)]<-(predictors$WBC-61.5919838)/16.32819272
-  predictors$QRS_intv[!is.na(predictors$QRS_intv)]<-(predictors$QRS_intv-7.903884425)/0.784763186
-  predictors$alcohol_indx[!is.na(predictors$alcohol_indx)]<-(predictors$alcohol_indx-3.681324783)/4.781456965
-  #this is CENTERED alcohol index = ((0.570XHIGHBALLS[drinks/wk])+(0.444XBEERS[cans or bottles/wk])+(0.400XWINE[glass/wk]))
-  predictors$wine[!is.na(predictors$wine)]<-(predictors$wine-1.532559397)/3.13716088
-  predictors$cocktail[!is.na(predictors$cocktail)]<-(predictors$cocktail-2.749524582)/5.049623158
-  predictors$height2[!is.na(predictors$height)]<-(predictors$height^2-28422.20329)/3185.597537 #this is centered height square
-  # predictors$height2[!is.na(predictors$height2)]<-(predictors$height^2-28422.20329)/3185.597537 #this is centered height square
-  predictors$cpackyr<-round((predictors$smoke_year*predictors$daily_cigs)/20,0) #this is a derived variable, need two variables, dont need to center
-  predictors$age<-(predictors$age-36.61082037)/9.249913362 #assuming nobody will miss age entry
-  
-  #make sure all categorical variables are factors
-  predictors$sex<-as.factor(predictors$sex)
-  
-  #generate year for prediction
-  year<-c(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
-  year2<-year^2
-  year<-cbind(year,year2)
-  
-  data_pred<-merge(predictors,year,all=TRUE)
-  
-  #Now I will create two scenario for 20-year prediction of FEV1 decline
-  #Scenario 1: quit smoke today (smk=0)
-  #Scenario 2: continue to smoke at current speed (smk=1)
-  smk<-c(0,1)
-  data_pred<-merge(data_pred,smk,all=TRUE) #From here on, for quitting smoke and continue to smoke, each scenario has 20 years of follow-up
-  
-  #Make sure non-smoker's baseline CUM_SMoke=0
-  
-  # data_pred <- rename(data_pred, replace=c("y"="smk")) #JK: added
-  #because we sometimes get teh following Warning: Error in : Expressions are currently not supported in `rename()
-  data_pred <- plyr:::rename(data_pred, replace=c("y"="smk")) #JK: added
-  
-  data_pred$cpackyr[data_pred$smk==0]<-data_pred$cpackyr[data_pred$smk==0]
-  data_pred$cpackyr[data_pred$smk==1]<-data_pred$cpackyr[data_pred$smk==1]+data_pred$daily_cigs[data_pred$smk==1]*data_pred$year[data_pred$smk==1]/20 #If continue to smoke, calculate cumulative pack-years over time
-  #Note: for smoke=0, pack-years will continue all the time
-  
-  #12/12/2017
-  # Warning message:
-  #   In data_pred$cum_smoke[data_pred$smk == 1] <- data_pred$cum_smoke +  :
-  #   number of items to replace is not a multiple of replacement length
-  
-  
-  ##############################################################
-  #  When data is ready, prediction begins here                #
-  ##############################################################
-  #Obtain fixed Coefficients;
-  # lmfin <- lmer_object
-  beta<-fixef(lmfin) #JK: extracting fixed-effects estimates
-  vcov<-vcov(lmfin) #JK: returns the variance-covariance matrix of the main parameters of a fitted model object
-  vbeta<-diag(vcov(lmfin)) #JK: extract or replace the diagnonal of a variance-covariance matrix, or contruct a diagonal variance-covariance matrix
-  
-  #vARIANCE-COVARIANCE coefficients
-  vc<-as.data.frame(VarCorr(lmfin)) #JK: functions to check if an object is a data frame, or coerce it if possible;
-  #JK: VarCorr() calculates the estimated variances, SD and correlations between the random-effects terms in a mixed-effects model.
-  vc #JK: vc produces a table with 4 rows; in the next four rows of code, extract elements in the 4th column and assign them to variables - v.int, v.yr, cov.int.yr, v.err
-  v.int<-vc$vcov[1]
-  v.yr<-vc$vcov[2]
-  cov.int.yr<-vc$vcov[3]
-  v.err<-vc$vcov[4]
-  
-  # Prediction;
-  
-  pred<-lme4:::predict.merMod(object=fev1_fvc, newdata=data_pred,re.form=NA, allow.new.levels=TRUE) #JK:predict is a generic function for predictions from the results of various model fitting functions.
-  
-  data_pred2<-cbind(data_pred,pred)
-  
-  #get predicted fev1 at baseline for calculation (pfev0)
-  pfev0<-subset(data_pred2,year==0 & smk==0,select=c(RANDOMID,pred))
-  colnames(pfev0)[2]<-"pfev0"
-  data_pred2<-join(data_pred2,pfev0,by='RANDOMID', type='right',match='all')
-  
-  #Calculation the bivariate correlation between baseline and future FEV1 value
-  cov11<-v.int+2*data_pred2$year*cov.int.yr+data_pred2$year2*v.yr+v.err
-  cov12<-v.int+data_pred2$year*cov.int.yr
-  cov22<-v.int+v.err
-  
-  data_pred2<-cbind(data_pred2,cov11,cov12)
-  # data_pred2<-merge(data_pred2,cov22,all=TRUE) #please make sure cov22's variable name is accurate in the prediction dataset
-  data_pred2<-cbind(data_pred2,cov22) #JK - we should be able to use a cbind instead of a merge, with merge, cov22 is renamed as 'y'
-  
-  #relate baseline fev1 to future fev1 to make final prediction
-  pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_0-data_pred2$pfev0)/data_pred2$cov22
-  se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
-  
-  #VERY IMPORTANT!!!!  - back-transform PREDICTION into original scale
-  #pred3<-pred2*y.sd+y.mean
-  pred3<-pred2*0.794445308+2.979447188
-  #se3<-se2*y.sd
-  se3<-se2*0.794445308
-  
-  lower3<-pred3-1.960463534*se3 #lower 95% prediction interval
-  upper3<-pred3+1.960463534*se3 #upper 95% prediction interval
-  
-  
-  data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr,data_pred2$fev1_0,pred3,se3,lower3,upper3)
-  data_pred_fin <- as.data.frame(data_pred_fin)
-  colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_0","predicted_FEV1","predicted_SE","lowerbound", "upperbound")
-  # Note: We used baseline FEV1 to predict future FEV1, so baseline FEV1 should be set to original value, se should be 0
-  data_pred_fin$predicted_FEV1[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]*0.794445308+2.979447188 #backtransformed
-  data_pred_fin$predicted_SE[data_pred_fin$year==0]<-0
-  data_pred_fin$lowerbound[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
-  data_pred_fin$upperbound[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
-  
-  #removin untransfromed FEV10 from the dataframme
-  data_pred_fin = subset(data_pred_fin, select = -c(fev1_0) )
-  
-  #calculating %predicted FEV1, sex == 1 male. sex == 1 female. Following the NHANES-III algorithm, using 25y/o white Caucasian as reference,for people aged 20 years and above
-  if   (predictors$sex == 1) { 
-    data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_upper <- 100 * data_pred_fin$upperbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_lower <- 100 * data_pred_fin$lowerbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    
-  }
-  
-  if   (predictors$sex == 2) { 
-    data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-    data_pred_fin$percentpred_upperbound <- 100 * data_pred_fin$upperbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-    data_pred_fin$percentpred_lowerbound <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-    
-  }
-  data_smoker <- subset(data_pred_fin, smoking == 1)
-  data_non_smoker <- subset(data_pred_fin, smoking == 0)
-  
-  #reducing rows in data_pred_fin
-  data_pred_fin <- subset(data_pred_fin, smoking == 0)
-  data_pred_fin <- subset(data_pred_fin, select = -c(smoking, predicted_FEV1, upperbound, lowerbound, percentpred, percentpred_upperbound, percentpred_lowerbound))
-  
-  #adding coloumns for smoking vs. quitting scenario
-  data_pred_fin$predicted_FEV1_smoker <- data_smoker$predicted_FEV1
-  data_pred_fin$lowerbound_smoker <- data_smoker$lowerbound
-  data_pred_fin$upperbound_smoker <- data_smoker$upperbound
-  
-  
-  data_pred_fin$predicted_FEV1_non_smoker <- data_non_smoker$predicted_FEV1
-  data_pred_fin$lowerbound_non_smoker <- data_non_smoker$lowerbound
-  data_pred_fin$upperbound_non_smoker <- data_non_smoker$upperbound
-  
-  #same for percentpred
-  data_pred_fin$percentpred_smoker <- data_smoker$percentpred
-  data_pred_fin$percentpred_lowerbound_smoker <- data_smoker$percentpred_lowerbound
-  data_pred_fin$percentpred_upperbound_smoker <- data_smoker$percentpred_upperbound
-  
-  
-  data_pred_fin$percentpred_non_smoker <- data_non_smoker$percentpred
-  data_pred_fin$percentpred_lowerbound_non_smoker <- data_non_smoker$percentpred_lowerbound
-  data_pred_fin$percentpred_upperbound_non_smoker <- data_non_smoker$percentpred_upperbound
-  
-  
-  #return(data_pred) #debug Amin. TODO
-  return(data_pred_fin)
-}
 
 ################################################################################################################
 #############################FUNCTIONS BELOW ARE NOT CURRENTLY USED#############################################

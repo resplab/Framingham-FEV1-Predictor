@@ -430,6 +430,8 @@ server <- function(input, output, session) {
     
     #Next line: save output for unit test(comment out next line under normal operation)
     write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
+    write.csv(prediction_results_fev1_fvc,file="./FEV1_FVC_make_predictions_output.CSV")
+    
     
     #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
     prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 0)
