@@ -35,8 +35,12 @@ jsResetCode <- "shinyjs.reset = function() {history.go(0)}" # Define the js meth
 source('./FEV_functions.R')
 
 GLOBAL_fev1_lmer_model <- NULL
+GLOBAL_fev1_fvc_lmer_model <- NULL
 GLOBAL_fev1_lmer_model_summary <- NULL
 GLOBAL_fev1_lmer_model_loaded_FLAG <- NULL
+prediction_results <- NULL
+prediction_results_fev1_fvc <-  NULL
+
 button_width <- 160
 
 # fev1_lmer_function_output_summary <- NULL
