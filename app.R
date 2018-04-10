@@ -29,6 +29,8 @@ labelMandatory <- function(label) {
 appCSS <-
   ".mandatory_star { color: red; }"
 
+jsResetCode <- "shinyjs.reset = function() {history.go(0)}" # Define the js method that resets the page
+
 
 source('./FEV_functions.R')
 
@@ -40,6 +42,7 @@ button_width <- 160
 # fev1_lmer_function_output_summary <- NULL
 ui <- fluidPage(
   shinyjs::useShinyjs(),
+  shinyjs::extendShinyjs(text = jsResetCode),                      # Add the js code to the page
   shinyjs::inlineCSS(appCSS),
   theme = shinytheme("united"),
   tags$head(tags$script(src = "message-handler.js")),
@@ -123,7 +126,7 @@ ui <- fluidPage(
         )
       ),
       actionButton("submit", "Run the prediction model"),
-      actionButton("clear_inputs_button", "Reset")
+      actionButton("reset_button", "Reset")
       ),
      
 
@@ -318,8 +321,8 @@ server <- function(input, output, session) {
   })
 
   #'Clear Inputs' button - set all inputs to NULL
-  observeEvent(input$clear_inputs_button, {
-    session$reload()
+  observeEvent(input$reset_button, {
+    shinyjs::js$reset()
   })
 
 
