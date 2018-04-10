@@ -38,8 +38,8 @@ GLOBAL_fev1_lmer_model <- NULL
 GLOBAL_fev1_fvc_lmer_model <- NULL
 GLOBAL_fev1_lmer_model_summary <- NULL
 GLOBAL_fev1_lmer_model_loaded_FLAG <- NULL
-prediction_results <- NULL
-prediction_results_fev1_fvc <-  NULL
+GLOBAL_prediction_results_fev1<- NULL
+GLOBAL_prediction_results_fev1_fvc <-  NULL
 
 button_width <- 160
 
@@ -432,15 +432,14 @@ server <- function(input, output, session) {
     # STEP2: remove 'beer' from the predictors dataframe
     predictors[,'beer'] <- NULL
     
-    prediction_results <<- make_predictions('fev1', GLOBAL_fev1_lmer_model, predictors)
-    prediction_results_fev1_fvc <<- make_predictions('fev1_fvc', GLOBAL_fev1_fvc_lmer_model, predictors)
+    GLOBAL_prediction_results_fev1<<- make_predictions('fev1', GLOBAL_fev1_lmer_model, predictors)
+    GLOBAL_prediction_results_fev1_fvc <<- make_predictions('fev1_fvc', GLOBAL_fev1_fvc_lmer_model, predictors)
     
     #Next line: save output for unit test(comment out next line under normal operation)
-    write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
-    write.csv(prediction_results_fev1_fvc,file="./FEV1_FVC_make_predictions_output.CSV")
+    # write.csv(GLOBAL_prediction_results_fev1,file="./FEV_make_predictions_output.CSV")
+    # write.csv(GLOBAL_prediction_results_fev1_fvc,file="./FEV1_FVC_make_predictions_output.CSV")
     
-    # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
-    
+
     f <- list(
       family = "Courier New, monospace",
       size = 18,
@@ -455,7 +454,7 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-   ggplotly(ggplot(prediction_results, aes(year)) + geom_line(aes(y = predicted_FEV1_if_smoke), color=lineColorSmoker, linetype=1) +
+   ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1_if_smoke), color=lineColorSmoker, linetype=1) +
                geom_ribbon(aes(ymin=FEV1_lowerbound_if_smoke, ymax= upperbound_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
                geom_line(aes(y = FEV1_lowerbound_if_smoke), color=errorLineColorSmoker, linetype=2) +
                geom_line(aes(y = upperbound_if_smoke), color=errorLineColorSmoker, linetype=2) +
@@ -473,22 +472,6 @@ server <- function(input, output, session) {
      
   FEV1_percent_pred_plot <- reactive ({
 
-    #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
-    # prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 0)
-    # 
-    # print (prediction_results_QuitSmoke) 
-    # #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
-    # prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 1)
-    # 
-    
-    #create prediction_results_toPlot dataframe
-    #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
-    #if either "smoke_year" or "daily_cigs" is not NA, then use prediction_results_ContinueSmoke
-    # if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
-    # if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
-    # 
-    # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
-    
     f <- list(
       family = "Courier New, monospace",
       size = 18,
@@ -503,7 +486,7 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    ggplotly(ggplot(prediction_results, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
+    ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
                geom_ribbon(aes(ymin=percentpred_FEV1_lowerbound_if_smoke, ymax= percentpred_upperbound_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
                geom_line(aes(y = percentpred_FEV1_lowerbound_if_smoke), color=errorLineColorSmoker, linetype=2) +
                geom_line(aes(y = percentpred_upperbound_if_smoke), color=errorLineColorSmoker, linetype=2) +
@@ -536,7 +519,7 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    ggplotly(ggplot(prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
+    ggplotly(ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
                geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
                geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
                geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
@@ -653,7 +636,7 @@ server <- function(input, output, session) {
          #                  "Coefficient of Variation (CV) (%)")
          # colnames(aa1)<- years
          
-         return(prediction_results)
+         return(GLOBAL_prediction_results_fev1)
        },
        include.rownames=T,
        caption="FEV1 Projections",
@@ -669,7 +652,7 @@ server <- function(input, output, session) {
        #                  "Coefficient of Variation (CV) (%)")
        # colnames(aa1)<- years
        
-       return(prediction_results)
+       return(GLOBAL_prediction_results_fev1)
      },
      include.rownames=T,
      caption="FEV1 Percent Predicted Projections",
@@ -684,7 +667,7 @@ server <- function(input, output, session) {
      })
      
      output$table_COPD_risk<-renderTable({
-       return(prediction_results_fev1_fvc)
+       return(GLOBAL_prediction_results_fev1_fvc)
      },
      include.rownames=T,
      caption="FEV1/FVC Prediction",
