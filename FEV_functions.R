@@ -372,30 +372,30 @@ make_predictions <- function(respVar, lmfin, predictors) {
       }
 
       #reducing rows in data_pred_fin
-      data_smoker <- subset(data_pred_fin, smoking == 1)
-      data_non_smoker <- subset(data_pred_fin, smoking == 0)
+      data_if_smoke <- subset(data_pred_fin, smoking == 1)
+      data_if_quit <- subset(data_pred_fin, smoking == 0)
       data_pred_fin <- subset(data_pred_fin, smoking == 0)
       data_pred_fin <- subset(data_pred_fin, select = -c(smoking, predicted_FEV1, upperbound, lowerbound, percentpred, percentpred_upperbound, percentpred_lowerbound))
       
       #adding coloumns for smoking vs. quitting scenario
-      data_pred_fin$predicted_FEV1_smoker <- data_smoker$predicted_FEV1
-      data_pred_fin$lowerbound_smoker <- data_smoker$lowerbound
-      data_pred_fin$upperbound_smoker <- data_smoker$upperbound
+      data_pred_fin$predicted_FEV1_if_smoke <- data_if_smoke$predicted_FEV1
+      data_pred_fin$lowerbound_if_smoke <- data_if_smoke$lowerbound
+      data_pred_fin$upperbound_if_smoke <- data_if_smoke$upperbound
       
       
-      data_pred_fin$predicted_FEV1_non_smoker <- data_non_smoker$predicted_FEV1
-      data_pred_fin$lowerbound_non_smoker <- data_non_smoker$lowerbound
-      data_pred_fin$upperbound_non_smoker <- data_non_smoker$upperbound
+      data_pred_fin$predicted_FEV1_if_quit <- data_if_quit$predicted_FEV1
+      data_pred_fin$lowerbound_if_quit <- data_if_quit$lowerbound
+      data_pred_fin$upperbound_if_quit <- data_if_quit$upperbound
       
       #same for percentpred
-      data_pred_fin$percentpred_smoker <- data_smoker$percentpred
-      data_pred_fin$percentpred_lowerbound_smoker <- data_smoker$percentpred_lowerbound
-      data_pred_fin$percentpred_upperbound_smoker <- data_smoker$percentpred_upperbound
+      data_pred_fin$percentpred_if_smoke <- data_if_smoke$percentpred
+      data_pred_fin$percentpred_lowerbound_if_smoke <- data_if_smoke$percentpred_lowerbound
+      data_pred_fin$percentpred_upperbound_if_smoke <- data_if_smoke$percentpred_upperbound
       
       
-      data_pred_fin$percentpred_non_smoker <- data_non_smoker$percentpred
-      data_pred_fin$percentpred_lowerbound_non_smoker <- data_non_smoker$percentpred_lowerbound
-      data_pred_fin$percentpred_upperbound_non_smoker <- data_non_smoker$percentpred_upperbound
+      data_pred_fin$percentpred_if_quit <- data_if_quit$percentpred
+      data_pred_fin$percentpred_lowerbound_if_quit <- data_if_quit$percentpred_lowerbound
+      data_pred_fin$percentpred_upperbound_if_quit <- data_if_quit$percentpred_upperbound
       
   } else if (respVar == 'fev1_fvc') {
     #print(data_pred2$fev1_fvc_0)  #debug amin
@@ -411,21 +411,21 @@ make_predictions <- function(respVar, lmfin, predictors) {
     colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","COPD_risk")
     print(data_pred_fin) #debug amin 
     #reducing rows in data_pred_fin
-    data_smoker <- subset(data_pred_fin, smoking == 1)
-    data_non_smoker <- subset(data_pred_fin, smoking == 0)
+    data_if_smoke <- subset(data_pred_fin, smoking == 1)
+    data_if_quit <- subset(data_pred_fin, smoking == 0)
     
     data_pred_fin <- subset(data_pred_fin, smoking == 0)
     data_pred_fin <- subset(data_pred_fin, select = -c(smoking, COPD_risk))
     
     #adding coloumns for smoking vs. quitting scenario
-    data_pred_fin$COPD_risk_smoker <- data_smoker$COPD_risk*100
-    # data_pred_fin$lowerbound_smoker <- data_smoker$lowerbound
-    # data_pred_fin$upperbound_smoker <- data_smoker$upperbound
+    data_pred_fin$COPD_risk_if_smoke <- data_if_smoke$COPD_risk*100
+    # data_pred_fin$lowerbound_if_smoke <- data_if_smoke$lowerbound
+    # data_pred_fin$upperbound_if_smoke <- data_if_smoke$upperbound
     
     
-    data_pred_fin$COPD_risk_non_smoker <- data_non_smoker$COPD_risk*100
-    # data_pred_fin$lowerbound_non_smoker <- data_non_smoker$lowerbound
-    # data_pred_fin$upperbound_non_smoker <- data_non_smoker$upperbound
+    data_pred_fin$COPD_risk_if_quit <- data_if_quit$COPD_risk*100
+    # data_pred_fin$lowerbound_if_quit <- data_if_quit$lowerbound
+    # data_pred_fin$upperbound_if_quit <- data_if_quit$upperbound
     
     
   }
