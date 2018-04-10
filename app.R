@@ -432,19 +432,6 @@ server <- function(input, output, session) {
     write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
     write.csv(prediction_results_fev1_fvc,file="./FEV1_FVC_make_predictions_output.CSV")
     
-    
-    #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
-    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 0)
-    
-    #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
-    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 1)
-    
-    #create prediction_results_toPlot dataframe
-    #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
-    #if either "smoke_year" or "daily_cigs" is not NA, then use prediction_results_ContinueSmoke
-    if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
-    if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
-    
     # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
     
     f <- list(
@@ -525,6 +512,38 @@ server <- function(input, output, session) {
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
   
+  
+  COPD_risk_plot <- reactive ({
+    
+    f <- list(
+      family = "Courier New, monospace",
+      size = 18,
+      color = "#7f7f7f"
+    )
+    x <- list(
+      title = "Time (year)",
+      titlefont = f
+    )
+    y <- list(
+      title = "COPD Risk (probablity %)",
+      titlefont = f
+    )
+    
+    ggplotly(ggplot(prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_smoker), color=lineColorSmoker, linetype=1) +
+               #geom_ribbon(aes(ymin=percentpred_lowerbound_smoker, ymax= percentpred_upperbound_smoker), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+               #geom_line(aes(y = percentpred_lowerbound_smoker), color=errorLineColorSmoker, linetype=2) +
+               #geom_line(aes(y = percentpred_upperbound_smoker), color=errorLineColorSmoker, linetype=2) +
+               
+               geom_line(aes(y = COPD_risk_non_smoker), color=lineColorNonSmoker, linetype=1) +
+               #geom_ribbon(aes(ymin=percentpred_lowerbound_non_smoker, ymax= percentpred_upperbound_non_smoker), linetype=2, alpha=0.1) +
+               #geom_line(aes(y = percentpred_lowerbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+               #geom_line(aes(y = percentpred_upperbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+               
+               #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
+               #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+               labs(x=xlab, y="COPD Risk (%)") +
+               theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+  })
      
      observeEvent(input$submit, {
       # Create a Progress object
@@ -651,6 +670,10 @@ server <- function(input, output, session) {
      
      output$plot_FEV1_percentpred <- renderPlotly({
        print (FEV1_percent_pred_plot())
+     })
+     
+     output$COPD_risk <- renderPlotly({
+       print (COPD_risk_plot())
      })
      
      output$table_COPD_risk<-renderTable({

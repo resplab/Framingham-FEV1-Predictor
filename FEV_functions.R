@@ -370,10 +370,10 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_pred_fin$percentpred_lowerbound <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
       
       }
+
+      #reducing rows in data_pred_fin
       data_smoker <- subset(data_pred_fin, smoking == 1)
       data_non_smoker <- subset(data_pred_fin, smoking == 0)
-      
-      #reducing rows in data_pred_fin
       data_pred_fin <- subset(data_pred_fin, smoking == 0)
       data_pred_fin <- subset(data_pred_fin, select = -c(smoking, predicted_FEV1, upperbound, lowerbound, percentpred, percentpred_upperbound, percentpred_lowerbound))
       
@@ -406,9 +406,27 @@ make_predictions <- function(respVar, lmfin, predictors) {
     
     prob<-pnorm(((0.7-0.7904786)/0.09908784-pred2)/se2)
     
-    print (data_pred2)
     data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob)
-    colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","PredictedProbablityofHavingCOPD")
+    data_pred_fin <- as.data.frame (data_pred_fin)
+    colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","COPD_risk")
+    print(data_pred_fin) #debug amin 
+    #reducing rows in data_pred_fin
+    data_smoker <- subset(data_pred_fin, smoking == 1)
+    data_non_smoker <- subset(data_pred_fin, smoking == 0)
+    
+    data_pred_fin <- subset(data_pred_fin, smoking == 0)
+    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, COPD_risk))
+    
+    #adding coloumns for smoking vs. quitting scenario
+    data_pred_fin$COPD_risk_smoker <- data_smoker$COPD_risk*100
+    # data_pred_fin$lowerbound_smoker <- data_smoker$lowerbound
+    # data_pred_fin$upperbound_smoker <- data_smoker$upperbound
+    
+    
+    data_pred_fin$COPD_risk_non_smoker <- data_non_smoker$COPD_risk*100
+    # data_pred_fin$lowerbound_non_smoker <- data_non_smoker$lowerbound
+    # data_pred_fin$upperbound_non_smoker <- data_non_smoker$upperbound
+    
     
   }
       
