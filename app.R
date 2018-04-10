@@ -523,7 +523,6 @@ server <- function(input, output, session) {
                geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
                geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
                geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
-               ggthemes::theme_tufte() + 
                geom_line(aes(y = COPD_risk_if_quit*100), color=lineColorNonSmoker, linetype=1) +
                geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_quit*100, ymax = COPD_risk_upperbound_if_quit*100), linetype=2, alpha=0.1) +
                geom_line(aes(y = COPD_risk_lowerbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
