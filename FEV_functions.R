@@ -422,18 +422,21 @@ make_predictions <- function(respVar, lmfin, predictors) {
     data_pred_fin <- subset(data_pred_fin, smoking == 0)
     data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr, COPD_risk))
     
-    #adding coloumns for smoking vs. quitting scenario
-    data_pred_fin$COPD_risk_if_smoke <- data_if_smoke$COPD_risk*100
-    # data_pred_fin$FEV1_lowerbound_if_smoke <- data_if_smoke$lowerbound
-    # data_pred_fin$upperbound_if_smoke <- data_if_smoke$upperbound
+    # adding coloumns for smoking vs. quitting scenario
+    # we assume a bernulli distribution for uncertainty around probablity. SE = p (1 - p)
+    data_pred_fin$COPD_risk_if_smoke <- data_if_smoke$COPD_risk
+    data_pred_fin$COPD_risk_lowerbound_if_smoke <- (data_if_smoke$COPD_risk - 1.96 * data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk)) 
+    data_pred_fin$COPD_risk_upperbound_if_smoke <- (data_if_smoke$COPD_risk + 1.96 * data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk)) 
     
     
-    data_pred_fin$COPD_risk_if_quit <- data_if_quit$COPD_risk*100
-    # data_pred_fin$FEV1_lowerbound_if_quit <- data_if_quit$lowerbound
-    # data_pred_fin$upperbound_if_quit <- data_if_quit$upperbound
+    data_pred_fin$COPD_risk_if_quit <- data_if_quit$COPD_risk
+    data_pred_fin$COPD_risk_lowerbound_if_quit <- (data_if_quit$COPD_risk - 1.96 * data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk))
+    data_pred_fin$COPD_risk_upperbound_if_quit <- (data_if_quit$COPD_risk + 1.96 * data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk))
     
     data_pred_fin$cpackyr_if_smoke <- data_if_smoke$cpackyr
     data_pred_fin$cpackyr_if_quit <- data_if_quit$cpackyr
+    
+    data_pred_fin <- as.data.frame (data_pred_fin)
     
     
   }
