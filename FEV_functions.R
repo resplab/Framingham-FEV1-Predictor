@@ -375,26 +375,31 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_if_smoke <- subset(data_pred_fin, smoking == 1)
       data_if_quit <- subset(data_pred_fin, smoking == 0)
       data_pred_fin <- subset(data_pred_fin, smoking == 0)
-      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, predicted_FEV1, upperbound, lowerbound, percentpred, percentpred_upperbound, percentpred_lowerbound))
+      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr, predicted_FEV1, upperbound, lowerbound, percentpred, percentpred_upperbound, percentpred_lowerbound))
       
       #adding coloumns for smoking vs. quitting scenario
       data_pred_fin$predicted_FEV1_if_smoke <- data_if_smoke$predicted_FEV1
-      data_pred_fin$lowerbound_if_smoke <- data_if_smoke$lowerbound
+      data_pred_fin$FEV1_lowerbound_if_smoke <- data_if_smoke$lowerbound
       data_pred_fin$upperbound_if_smoke <- data_if_smoke$upperbound
       
       
       data_pred_fin$predicted_FEV1_if_quit <- data_if_quit$predicted_FEV1
-      data_pred_fin$lowerbound_if_quit <- data_if_quit$lowerbound
+      data_pred_fin$FEV1_lowerbound_if_quit <- data_if_quit$lowerbound
       data_pred_fin$upperbound_if_quit <- data_if_quit$upperbound
+      
+      data_pred_fin$cpackyr_if_smoke <- data_if_smoke$cpackyr
+      data_pred_fin$cpackyr_if_quit <- data_if_quit$cpackyr
+      
+      
       
       #same for percentpred
       data_pred_fin$percentpred_if_smoke <- data_if_smoke$percentpred
-      data_pred_fin$percentpred_lowerbound_if_smoke <- data_if_smoke$percentpred_lowerbound
+      data_pred_fin$percentpred_FEV1_lowerbound_if_smoke <- data_if_smoke$percentpred_lowerbound
       data_pred_fin$percentpred_upperbound_if_smoke <- data_if_smoke$percentpred_upperbound
       
       
       data_pred_fin$percentpred_if_quit <- data_if_quit$percentpred
-      data_pred_fin$percentpred_lowerbound_if_quit <- data_if_quit$percentpred_lowerbound
+      data_pred_fin$percentpred_FEV1_lowerbound_if_quit <- data_if_quit$percentpred_lowerbound
       data_pred_fin$percentpred_upperbound_if_quit <- data_if_quit$percentpred_upperbound
       
   } else if (respVar == 'fev1_fvc') {
@@ -415,17 +420,20 @@ make_predictions <- function(respVar, lmfin, predictors) {
     data_if_quit <- subset(data_pred_fin, smoking == 0)
     
     data_pred_fin <- subset(data_pred_fin, smoking == 0)
-    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, COPD_risk))
+    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr, COPD_risk))
     
     #adding coloumns for smoking vs. quitting scenario
     data_pred_fin$COPD_risk_if_smoke <- data_if_smoke$COPD_risk*100
-    # data_pred_fin$lowerbound_if_smoke <- data_if_smoke$lowerbound
+    # data_pred_fin$FEV1_lowerbound_if_smoke <- data_if_smoke$lowerbound
     # data_pred_fin$upperbound_if_smoke <- data_if_smoke$upperbound
     
     
     data_pred_fin$COPD_risk_if_quit <- data_if_quit$COPD_risk*100
-    # data_pred_fin$lowerbound_if_quit <- data_if_quit$lowerbound
+    # data_pred_fin$FEV1_lowerbound_if_quit <- data_if_quit$lowerbound
     # data_pred_fin$upperbound_if_quit <- data_if_quit$upperbound
+    
+    data_pred_fin$cpackyr_if_smoke <- data_if_smoke$cpackyr
+    data_pred_fin$cpackyr_if_quit <- data_if_quit$cpackyr
     
     
   }
