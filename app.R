@@ -29,17 +29,24 @@ labelMandatory <- function(label) {
 appCSS <-
   ".mandatory_star { color: red; }"
 
+jsResetCode <- "shinyjs.reset = function() {history.go(0)}" # Define the js method that resets the page
+
 
 source('./FEV_functions.R')
 
-GLOBAL_lmer_model <- NULL
-GLOBAL_lmer_model_summary <- NULL
-GLOBAL_lmer_model_loaded_FLAG <- NULL
+GLOBAL_fev1_lmer_model <- NULL
+GLOBAL_fev1_fvc_lmer_model <- NULL
+GLOBAL_fev1_lmer_model_summary <- NULL
+GLOBAL_fev1_lmer_model_loaded_FLAG <- NULL
+GLOBAL_prediction_results_fev1<- NULL
+GLOBAL_prediction_results_fev1_fvc <-  NULL
+
 button_width <- 160
 
-# lmer_function_output_summary <- NULL
+# fev1_lmer_function_output_summary <- NULL
 ui <- fluidPage(
   shinyjs::useShinyjs(),
+  shinyjs::extendShinyjs(text = jsResetCode),                      # Add the js code to the page
   shinyjs::inlineCSS(appCSS),
   theme = shinytheme("united"),
   tags$head(tags$script(src = "message-handler.js")),
@@ -123,7 +130,7 @@ ui <- fluidPage(
         )
       ),
       actionButton("submit", "Run the prediction model"),
-      actionButton("clear_inputs_button", "Reset")
+      actionButton("reset_button", "Reset")
       ),
      
 
@@ -143,11 +150,14 @@ ui <- fluidPage(
                   ),
                   
                   tabPanel("COPD Risk",
-                           plotlyOutput("COPD_risk")
+                           plotlyOutput("COPD_risk"),
+                           br(),
+                           tableOutput("table_COPD_risk")
+                           
                   ),
 
-                  tabPanel("Model Summary",
-                            verbatimTextOutput("lmer_summary")),
+                  # tabPanel("Model Summary",
+                  #           verbatimTextOutput("lmer_summary")),
                   
                   tabPanel("Disclaimer",  includeMarkdown("./disclaimer.rmd")),
                   tabPanel("About",  includeMarkdown("./about.rmd"))
@@ -315,8 +325,8 @@ server <- function(input, output, session) {
   })
 
   #'Clear Inputs' button - set all inputs to NULL
-  observeEvent(input$clear_inputs_button, {
-    session$reload()
+  observeEvent(input$reset_button, {
+    shinyjs::js$reset()
   })
 
 
@@ -368,7 +378,7 @@ server <- function(input, output, session) {
   )
   
   FEV1_plot <- reactive ({
-    #req(GLOBAL_lmer_model_loaded_FLAG)
+    #req(GLOBAL_fev1_lmer_model_loaded_FLAG)
     
     predictors_data_frame <- predictors <- isolate(
       data.frame(
@@ -422,28 +432,14 @@ server <- function(input, output, session) {
     # STEP2: remove 'beer' from the predictors dataframe
     predictors[,'beer'] <- NULL
     
-    
-    prediction_results <<- make_predictions(GLOBAL_lmer_model, predictors)
-    
-    
+    GLOBAL_prediction_results_fev1<<- make_predictions('fev1', GLOBAL_fev1_lmer_model, predictors)
+    GLOBAL_prediction_results_fev1_fvc <<- make_predictions('fev1_fvc', GLOBAL_fev1_fvc_lmer_model, predictors)
     
     #Next line: save output for unit test(comment out next line under normal operation)
-    write.csv(prediction_results,file="./FEV_make_predictions_output.CSV")
+    # write.csv(GLOBAL_prediction_results_fev1,file="./FEV_make_predictions_output.CSV")
+    # write.csv(GLOBAL_prediction_results_fev1_fvc,file="./FEV1_FVC_make_predictions_output.CSV")
     
-    #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
-    prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 0)
-    
-    #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
-    prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 1)
-    
-    #create prediction_results_toPlot dataframe
-    #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
-    #if either "smoke_year" or "daily_cigs" is not NA, then use prediction_results_ContinueSmoke
-    if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
-    if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
-    
-    # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
-    
+
     f <- list(
       family = "Courier New, monospace",
       size = 18,
@@ -458,15 +454,15 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-   ggplotly(ggplot(prediction_results, aes(year)) + geom_line(aes(y = predicted_FEV1_smoker), color=lineColorSmoker, linetype=1) +
-               geom_ribbon(aes(ymin=lowerbound_smoker, ymax= upperbound_smoker), linetype=2, alpha=0.1, fill=lineColorSmoker) +
-               geom_line(aes(y = lowerbound_smoker), color=errorLineColorSmoker, linetype=2) +
-               geom_line(aes(y = upperbound_smoker), color=errorLineColorSmoker, linetype=2) +
+   ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1_if_smoke), color=lineColorSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=FEV1_lowerbound_if_smoke, ymax= upperbound_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+               geom_line(aes(y = FEV1_lowerbound_if_smoke), color=errorLineColorSmoker, linetype=2) +
+               geom_line(aes(y = upperbound_if_smoke), color=errorLineColorSmoker, linetype=2) +
               
-               geom_line(aes(y = predicted_FEV1_non_smoker), color=lineColorNonSmoker, linetype=1) +
-               geom_ribbon(aes(ymin=lowerbound_non_smoker, ymax= upperbound_non_smoker), linetype=2, alpha=0.1) +
-               geom_line(aes(y = lowerbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
-               geom_line(aes(y = upperbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+               geom_line(aes(y = predicted_FEV1_if_quit), color=lineColorNonSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=FEV1_lowerbound_if_quit, ymax= upperbound_if_quit), linetype=2, alpha=0.1) +
+               geom_line(aes(y = FEV1_lowerbound_if_quit), color=errorLineColorNonSmoker, linetype=2) +
+               geom_line(aes(y = upperbound_if_quit), color=errorLineColorNonSmoker, linetype=2) +
               
                #annotate("text", 1, 0.5, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
                #annotate("text", 1.15, 0.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
@@ -476,22 +472,6 @@ server <- function(input, output, session) {
      
   FEV1_percent_pred_plot <- reactive ({
 
-    #create prediction_results_QuitSmoke dataframe for scenario #1 (user quits smoking today)
-    # prediction_results_QuitSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 0)
-    # 
-    # print (prediction_results_QuitSmoke) 
-    # #create prediction_results_ContinueSmoke dataframe for scenario #2 (user continues to smoke)
-    # prediction_results_ContinueSmoke <- subset.data.frame(prediction_results, prediction_results$smoking == 1)
-    # 
-    
-    #create prediction_results_toPlot dataframe
-    #if "smoke_year" and "daily_cigs" inputs are both NA, then use prediction_results_QuitSmoke dataframe
-    #if either "smoke_year" or "daily_cigs" is not NA, then use prediction_results_ContinueSmoke
-    # if(is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_QuitSmoke}
-    # if(!is.na(input$daily_cigs)) {prediction_results_toPlot <- prediction_results_ContinueSmoke}
-    # 
-    # save(prediction_results,prediction_results_QuitSmoke,prediction_results_ContinueSmoke,prediction_results_toPlot,file="~/RStudio projects/20171228/prediction_data_frames.RData")
-    
     f <- list(
       family = "Courier New, monospace",
       size = 18,
@@ -506,15 +486,15 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    ggplotly(ggplot(prediction_results, aes(year)) + geom_line(aes(y = percentpred_smoker), color=lineColorSmoker, linetype=1) +
-               geom_ribbon(aes(ymin=percentpred_lowerbound_smoker, ymax= percentpred_upperbound_smoker), linetype=2, alpha=0.1, fill=lineColorSmoker) +
-               geom_line(aes(y = percentpred_lowerbound_smoker), color=errorLineColorSmoker, linetype=2) +
-               geom_line(aes(y = percentpred_upperbound_smoker), color=errorLineColorSmoker, linetype=2) +
+    ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=percentpred_FEV1_lowerbound_if_smoke, ymax= percentpred_upperbound_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+               geom_line(aes(y = percentpred_FEV1_lowerbound_if_smoke), color=errorLineColorSmoker, linetype=2) +
+               geom_line(aes(y = percentpred_upperbound_if_smoke), color=errorLineColorSmoker, linetype=2) +
                
-               geom_line(aes(y = percentpred_non_smoker), color=lineColorNonSmoker, linetype=1) +
-               geom_ribbon(aes(ymin=percentpred_lowerbound_non_smoker, ymax= percentpred_upperbound_non_smoker), linetype=2, alpha=0.1) +
-               geom_line(aes(y = percentpred_lowerbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
-               geom_line(aes(y = percentpred_upperbound_non_smoker), color=errorLineColorNonSmoker, linetype=2) +
+               geom_line(aes(y = percentpred_if_quit), color=lineColorNonSmoker, linetype=1) +
+               geom_ribbon(aes(ymin=percentpred_FEV1_lowerbound_if_quit, ymax= percentpred_upperbound_if_quit), linetype=2, alpha=0.1) +
+               geom_line(aes(y = percentpred_FEV1_lowerbound_if_quit), color=errorLineColorNonSmoker, linetype=2) +
+               geom_line(aes(y = percentpred_upperbound_if_quit), color=errorLineColorNonSmoker, linetype=2) +
                
                #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
                #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
@@ -522,6 +502,37 @@ server <- function(input, output, session) {
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
   })
   
+  
+  COPD_risk_plot <- reactive ({
+    
+    f <- list(
+      family = "Courier New, monospace",
+      size = 18,
+      color = "#7f7f7f"
+    )
+    x <- list(
+      title = "Time (year)",
+      titlefont = f
+    )
+    y <- list(
+      title = "COPD Risk (probablity %)",
+      titlefont = f
+    )
+    
+    ggplotly(ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
+               geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+               geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
+               geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
+               geom_line(aes(y = COPD_risk_if_quit*100), color=lineColorNonSmoker, linetype=1) +
+               geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_quit*100, ymax = COPD_risk_upperbound_if_quit*100), linetype=2, alpha=0.1) +
+               geom_line(aes(y = COPD_risk_lowerbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
+               geom_line(aes(y = COPD_risk_upperbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
+               
+               #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
+               #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+               labs(x=xlab, y="COPD Risk (%)") +
+               theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+  })
      
      observeEvent(input$submit, {
       # Create a Progress object
@@ -530,30 +541,37 @@ server <- function(input, output, session) {
 
 
       #use collapse="" to get rid of spaces between 1s and 0s; use sep="" to get rid of space betweeen file name and ".rds"
-      full_file_name = paste("./",paste(file_name(),collapse=""),".rds",sep="")
+      fev1_full_file_name = paste("./",paste(file_name(), collapse=""), "-fev1", ".rds",sep="")
+      fev1_fvc_full_file_name = paste("./",paste(file_name(), collapse=""),"-fev1_fvc", ".rds",sep="")
+      
       # browser()
 
       #if file exists but model has not been loaded, load the model from the file
-      if(file.exists(full_file_name) && is.null(GLOBAL_lmer_model_loaded_FLAG)){
+      if(file.exists(fev1_full_file_name) && is.null(GLOBAL_fev1_lmer_model_loaded_FLAG)){
         progress$set(message = "Model found. Loading the model...", value = 0.50)
-        lmer_function_output <- readRDS(full_file_name)
+        fev1_lmer_function_output <- readRDS(fev1_full_file_name)
+        fev1_fvc_lmer_function_output <- readRDS(fev1_fvc_full_file_name)
+        
 
         #set the model-loaded-flag to TRUE
-        GLOBAL_lmer_model_loaded_FLAG <<- TRUE
+        GLOBAL_fev1_lmer_model_loaded_FLAG <<- TRUE
         progress$set(message = "Extracting model parameters", value = 0.80)
-        GLOBAL_lmer_model <<- lmer_function_output #could also be after lines 178-181
-        GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
+        GLOBAL_fev1_lmer_model <<- fev1_lmer_function_output 
+        GLOBAL_fev1_fvc_lmer_model <<- fev1_fvc_lmer_function_output 
+        
+        #GLOBAL_fev1_lmer_model_summary <<- summary(fev1_lmer_function_output) #model summary is disabled for now
         progress$set(message = "Plotting", value = 0.9)
   
-        output$lmer_summary <- renderPrint({ GLOBAL_lmer_model_summary })
+        #output$lmer_summary <- renderPrint({ GLOBAL_fev1_lmer_model_summary }) #model summary is disabled for now
         
       }
       #if file exists and model has been loaded, then get the model from GLOBAL variable
-      else if(file.exists(full_file_name) && !is.null(GLOBAL_lmer_model_loaded_FLAG)){
-          output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
-      }
+      # else if(file.exists(fev1_full_file_name) && !is.null(GLOBAL_fev1_lmer_model_loaded_FLAG)){
+      #     output$lmer_summary <- renderPrint({GLOBAL_fev1_lmer_model_summary})
+      # }
+      
       #if file does not exist, then calculate lmer model and create file
-      else if(!file.exists(full_file_name)){
+      else if(!file.exists(fev1_full_file_name)){
         # browser()
         
         #BINARY_CODE_DATAFRAME
@@ -586,21 +604,26 @@ server <- function(input, output, session) {
         # saveRDS(BINARY_CODE_DATAFRAME,"FEV_calculate_lmer_fn_input1_BINARY_CODE_DATAFRAME.RDS")
         # saveRDS(FACTORS_NAMES_DATAFRAME,"FEV_calculate_lmer_fn_input2_FACTORS_NAMES_DATAFRAME.RDS")
         
-        lmer_function_output <- FEV_calculate_lmer_fn(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
-
+        fev1_lmer_function_output <- FEV_calculate_lmer_fn("fev1", BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
+        fev1_fvc_lmer_function_output <- FEV_calculate_lmer_fn("fev1_fvc", BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
+        
         #set the model-loaded-flag to TRUE
-        GLOBAL_lmer_model_loaded_FLAG <<- TRUE
+        GLOBAL_fev1_lmer_model_loaded_FLAG <<- TRUE
 
         progress$set(message = "Saving the model", value = 0.60)
-        saveRDS(lmer_function_output,file=full_file_name)
+        saveRDS(fev1_lmer_function_output, file=fev1_full_file_name)
+        saveRDS(fev1_fvc_lmer_function_output, file=fev1_fvc_full_file_name)
+        
         
         progress$set(message = "Loading the model, this might take a few minutes", value = 0.80)
-        GLOBAL_lmer_model <<- lmer_function_output #most important has to be after line 214
-        GLOBAL_lmer_model_summary <<- summary(lmer_function_output)
+        GLOBAL_fev1_lmer_model <<- fev1_lmer_function_output 
+        GLOBAL_fev1_fvc_lmer_model <<- fev1_fvc_lmer_function_output
+        
+        #GLOBAL_fev1_lmer_model_summary <<- summary(fev1_lmer_function_output)  #summary tab is disabled for now
         
         progress$set(message = "Plotting...", value = 0.90)
         
-          output$lmer_summary <- renderPrint({GLOBAL_lmer_model_summary})
+          #output$lmer_summary <- renderPrint({GLOBAL_fev1_lmer_model_summary}) #summary tab is disabled for now
           
       }
        output$plot_FEV1_decline <- renderPlotly({
@@ -612,11 +635,12 @@ server <- function(input, output, session) {
          #                  "Coefficient of Variation (CV) (%)")
          # colnames(aa1)<- years
          
-         return(prediction_results)
+         return(GLOBAL_prediction_results_fev1)
        },
        include.rownames=T,
-       caption="FEV1 Heterogeneity",
+       caption="FEV1 Projections",
        caption.placement = getOption("xtable.caption.placement", "top"))
+       
        output$plot_FEV1_percentpred <- renderPlotly({
          print (FEV1_percent_pred_plot())
        })
@@ -627,15 +651,30 @@ server <- function(input, output, session) {
        #                  "Coefficient of Variation (CV) (%)")
        # colnames(aa1)<- years
        
-       return(prediction_results)
+       return(GLOBAL_prediction_results_fev1)
      },
      include.rownames=T,
-     caption="FEV1 Heterogeneity",
+     caption="FEV1 Percent Predicted Projections",
      caption.placement = getOption("xtable.caption.placement", "top"))
+     
      output$plot_FEV1_percentpred <- renderPlotly({
        print (FEV1_percent_pred_plot())
      })
+     
+     output$COPD_risk <- renderPlotly({
+       print (COPD_risk_plot())
+     })
+     
+     output$table_COPD_risk<-renderTable({
+       return(GLOBAL_prediction_results_fev1_fvc)
+     },
+     include.rownames=T,
+     caption="FEV1/FVC Prediction",
+     caption.placement = getOption("xtable.caption.placement", "top"))
+     
+     
      progress$set(message = "Done!", value = 1)
+     
      
 }) 
  
