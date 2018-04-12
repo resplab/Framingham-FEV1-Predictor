@@ -403,10 +403,8 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_pred_fin$percentpred_upperbound_if_quit <- data_if_quit$percentpred_upperbound
       
   } else if (respVar == 'fev1_fvc') {
-    #print(data_pred2$fev1_fvc_0)  #debug amin
     pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_fvc_0-data_pred2$pfev_fvc0)/data_pred2$cov22
-    #print(pred2)  #debug amin
-  
+
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
     
     prob<-pnorm(((0.7-0.7904786)/0.09908784-pred2)/se2)
@@ -414,7 +412,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
     data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob)
     data_pred_fin <- as.data.frame (data_pred_fin)
     colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","COPD_risk")
-    print(data_pred_fin) #debug amin 
+
     #reducing rows in data_pred_fin
     data_if_smoke <- subset(data_pred_fin, smoking == 1)
     data_if_quit <- subset(data_pred_fin, smoking == 0)
@@ -425,13 +423,15 @@ make_predictions <- function(respVar, lmfin, predictors) {
     # adding coloumns for smoking vs. quitting scenario
     # we assume a bernulli distribution for uncertainty around probablity. SE = p (1 - p)
     data_pred_fin$COPD_risk_if_smoke <- data_if_smoke$COPD_risk
-    data_pred_fin$COPD_risk_lowerbound_if_smoke <- (data_if_smoke$COPD_risk - 1.96 * data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk)) 
-    data_pred_fin$COPD_risk_upperbound_if_smoke <- (data_if_smoke$COPD_risk + 1.96 * data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk)) 
+    SE_COPD_risk_if_smoke <- sqrt(data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk) / 13567) #13567 is n
+    data_pred_fin$COPD_risk_lowerbound_if_smoke <- (data_if_smoke$COPD_risk - 1.96 *  SE_COPD_risk_if_smoke) 
+    data_pred_fin$COPD_risk_upperbound_if_smoke <- (data_if_smoke$COPD_risk + 1.96 *  SE_COPD_risk_if_smoke) 
     
     
     data_pred_fin$COPD_risk_if_quit <- data_if_quit$COPD_risk
-    data_pred_fin$COPD_risk_lowerbound_if_quit <- (data_if_quit$COPD_risk - 1.96 * data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk))
-    data_pred_fin$COPD_risk_upperbound_if_quit <- (data_if_quit$COPD_risk + 1.96 * data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk))
+    SE_COPD_risk_if_quit <- sqrt (data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk) / 13567)
+    data_pred_fin$COPD_risk_lowerbound_if_quit <- (data_if_quit$COPD_risk - 1.96 * SE_COPD_risk_if_quit)
+    data_pred_fin$COPD_risk_upperbound_if_quit <- (data_if_quit$COPD_risk + 1.96 * SE_COPD_risk_if_quit)
     
     data_pred_fin$cpackyr_if_smoke <- data_if_smoke$cpackyr
     data_pred_fin$cpackyr_if_quit <- data_if_quit$cpackyr
