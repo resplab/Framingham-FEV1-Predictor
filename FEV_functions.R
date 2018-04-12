@@ -301,7 +301,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
   #vARIANCE-COVARIANCE coefficients
   vc<-as.data.frame(VarCorr(lmfin)) #JK: functions to check if an object is a data frame, or coerce it if possible;
   #JK: VarCorr() calculates the estimated variances, SD and correlations between the random-effects terms in a mixed-effects model.
-  vc #JK: vc produces a table with 4 rows; in the next four rows of code, extract elements in the 4th column and assign them to variables - v.int, v.yr, cov.int.yr, v.err
+  #JK: vc produces a table with 4 rows; in the next four rows of code, extract elements in the 4th column and assign them to variables - v.int, v.yr, cov.int.yr, v.err
   v.int<-vc$vcov[1]
   v.yr<-vc$vcov[2]
   cov.int.yr<-vc$vcov[3]
@@ -329,38 +329,70 @@ make_predictions <- function(respVar, lmfin, predictors) {
     data_pred2<-join(data_pred2,pfev_fvc0,by='RANDOMID', type='right',match='all')
   }
 
-  #Calculation the bivariate correlation between baseline and future FEV1 value
+  #Calculation the bivariate correlation between baseline and future FEV1 value, used for predition interval
   cov11<-v.int+2*data_pred2$year*cov.int.yr+data_pred2$year2*v.yr+v.err
   cov12<-v.int+data_pred2$year*cov.int.yr
   cov22<-v.int+v.err
 
-  data_pred2<-cbind(data_pred2,cov11,cov12)
-  # data_pred2<-merge(data_pred2,cov22,all=TRUE) #please make sure cov22's variable name is accurate in the prediction dataset
-  data_pred2<-cbind(data_pred2,cov22) #JK - we should be able to use a cbind instead of a merge, with merge, cov22 is renamed as 'y'
-
+  #Calculation the bivariate correlation between baseline and future FEV1 value, used for confidence interval
+  rand_eff <- ranef(lmfin)
+  rand_eff <- as.data.frame(rand_eff)
+  rand_int <- subset(rand_eff, term == "(Intercept)")[,4]
+  rand_yr  <- subset(rand_eff, term == "year")[,4]
+  
+  v.int.rand <- var(rand_int) 
+  v.yr.rand <- var(rand_yr)
+  cov.int.yr.rand <- cov(rand_int, rand_yr)
+  
+  cov11.rand <-v.int.rand+2*data_pred2$year*cov.int.yr.rand+data_pred2$year2*v.yr.rand#+v.err
+  cov12.rand <-v.int.rand+data_pred2$year*cov.int.yr.rand
+  cov22.rand <-v.int.rand#+v.err
+  
+  print("v.yr")
+  print(v.yr)
+  print("v.yr.rand")
+  print(v.yr.rand)
+  print("v.int")
+  print(v.int)
+  print("v.int.rand")
+  print(v.int.rand)
+  print("v.err")
+  print (v.err)
+  
+  
+  data_pred2<-cbind(data_pred2, cov11, cov12, cov22, cov11.rand, cov12.rand, cov22.rand )
+  
   #relate baseline fev1 to future fev1 to make final prediction
   if (respVar == 'fev1') { 
     pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_0-data_pred2$pfev0)/data_pred2$cov22
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
-  
+    se2.rand <- sqrt(data_pred2$cov11.rand-data_pred2$cov12.rand*data_pred2$cov12.rand/data_pred2$cov22.rand)
+    
     #VERY IMPORTANT!!!!  - back-transform PREDICTION into original scale
     #pred3<-pred2*y.sd+y.mean
     pred3<-pred2*0.794445308+2.979447188
     #se3<-se2*y.sd
     se3<-se2*0.794445308
+    se3.rand <- se2.rand*0.794445308
+    
     
     lower3<-pred3-1.960463534*se3 #lower 95% prediction interval
     upper3<-pred3+1.960463534*se3 #upper 95% prediction interval
   
+    lower3.rand<-pred3-1.960463534*se3.rand #lower 95% confidence interval
+    upper3.rand<-pred3+1.960463534*se3.rand #upper 95% confidence interval
   
-    data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr,data_pred2$fev1_0,pred3,se3,lower3,upper3)
+    data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr,data_pred2$fev1_0,pred3,se3, lower3, upper3, se3.rand, lower3.rand, upper3.rand)
     data_pred_fin <- as.data.frame(data_pred_fin)
-    colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_0","predicted_FEV1","predicted_SE","lowerbound", "upperbound")
+    colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_0","predicted_FEV1","predicted_SE_PI", "lowerbound_PI", "upperbound_PI", "predicted_SE_CI", "lowerbound_CI", "upperbound_CI")
     # Note: We used baseline FEV1 to predict future FEV1, so baseline FEV1 should be set to original value, se should be 0
     data_pred_fin$predicted_FEV1[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]*0.794445308+2.979447188 #backtransformed
-    data_pred_fin$predicted_SE[data_pred_fin$year==0]<-0
-    data_pred_fin$lowerbound[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
-    data_pred_fin$upperbound[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
+    data_pred_fin$predicted_SE_PI[data_pred_fin$year==0]<-0
+    data_pred_fin$predicted_SE_CI[data_pred_fin$year==0]<-0
+    data_pred_fin$lowerbound_PI[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
+    data_pred_fin$upperbound_PI[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
+    data_pred_fin$lowerbound_CI[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
+    data_pred_fin$upperbound_CI[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
     
     #removin untransfromed FEV10 from the dataframme
     data_pred_fin = subset(data_pred_fin, select = -c(fev1_0) )
@@ -368,15 +400,19 @@ make_predictions <- function(respVar, lmfin, predictors) {
     #calculating %predicted FEV1, sex == 1 male. sex == 1 female. Following the NHANES-III algorithm, using 25y/o white Caucasian as reference,for people aged 20 years and above
     if   (predictors$sex == 1) { 
     data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_upperbound <- 100 * data_pred_fin$upperbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_lowerbound <- 100 * data_pred_fin$lowerbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_upperbound_PI <- 100 * data_pred_fin$upperbound_PI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_lowerbound_PI <- 100 * data_pred_fin$lowerbound_PI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_upperbound_CI <- 100 * data_pred_fin$upperbound_CI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_lowerbound_CI <- 100 * data_pred_fin$lowerbound_CI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
     
     }
     
     if   (predictors$sex == 2) { 
       data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-      data_pred_fin$percentpred_upperbound <- 100 * data_pred_fin$upperbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-      data_pred_fin$percentpred_lowerbound <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+      data_pred_fin$percentpred_upperbound_PI <- 100 * data_pred_fin$upperbound_PI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+      data_pred_fin$percentpred_lowerbound_PI <- 100 * data_pred_fin$lowerbound_PI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+      data_pred_fin$percentpred_upperbound_CI <- 100 * data_pred_fin$upperbound_CI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+      data_pred_fin$percentpred_lowerbound_CI <- 100 * data_pred_fin$lowerbound_CI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
       
       }
 
@@ -384,17 +420,17 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_if_smoke <- subset(data_pred_fin, smoking == 1)
       data_if_quit <- subset(data_pred_fin, smoking == 0)
       data_pred_fin <- subset(data_pred_fin, smoking == 0)
-      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr, predicted_FEV1, upperbound, lowerbound, percentpred, percentpred_upperbound, percentpred_lowerbound))
+      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr, predicted_FEV1, upperbound_PI, lowerbound_PI,  upperbound_CI, lowerbound_CI, percentpred, percentpred_upperbound_PI, percentpred_lowerbound_PI, percentpred_upperbound_CI, percentpred_lowerbound_CI))
       
       #adding coloumns for smoking vs. quitting scenario
       data_pred_fin$predicted_FEV1_if_smoke <- data_if_smoke$predicted_FEV1
-      data_pred_fin$FEV1_lowerbound_if_smoke <- data_if_smoke$lowerbound
-      data_pred_fin$upperbound_if_smoke <- data_if_smoke$upperbound
+      data_pred_fin$FEV1_lowerbound_CI_if_smoke <- data_if_smoke$lowerbound_CI
+      data_pred_fin$upperbound_CI_if_smoke <- data_if_smoke$upperbound_CI
       
       
       data_pred_fin$predicted_FEV1_if_quit <- data_if_quit$predicted_FEV1
-      data_pred_fin$FEV1_lowerbound_if_quit <- data_if_quit$lowerbound
-      data_pred_fin$upperbound_if_quit <- data_if_quit$upperbound
+      data_pred_fin$FEV1_lowerbound_CI_if_quit <- data_if_quit$lowerbound_CI
+      data_pred_fin$upperbound_CI_if_quit <- data_if_quit$upperbound_CI
       
       data_pred_fin$cpackyr_if_smoke <- data_if_smoke$cpackyr
       data_pred_fin$cpackyr_if_quit <- data_if_quit$cpackyr
@@ -403,13 +439,13 @@ make_predictions <- function(respVar, lmfin, predictors) {
       
       #same for percentpred
       data_pred_fin$percentpred_if_smoke <- data_if_smoke$percentpred
-      data_pred_fin$percentpred_FEV1_lowerbound_if_smoke <- data_if_smoke$percentpred_lowerbound
-      data_pred_fin$percentpred_upperbound_if_smoke <- data_if_smoke$percentpred_upperbound
+      data_pred_fin$percentpred_FEV1_lowerbound_CI_if_smoke <- data_if_smoke$percentpred_lowerbound_CI
+      data_pred_fin$percentpred_upperbound_CI_if_smoke <- data_if_smoke$percentpred_upperbound_CI
       
       
       data_pred_fin$percentpred_if_quit <- data_if_quit$percentpred
-      data_pred_fin$percentpred_FEV1_lowerbound_if_quit <- data_if_quit$percentpred_lowerbound
-      data_pred_fin$percentpred_upperbound_if_quit <- data_if_quit$percentpred_upperbound
+      data_pred_fin$percentpred_FEV1_lowerbound_CI_if_quit <- data_if_quit$percentpred_lowerbound_CI
+      data_pred_fin$percentpred_upperbound_CI_if_quit <- data_if_quit$percentpred_upperbound_CI
       
   } else if (respVar == 'fev1_fvc') {
     pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_fvc_0-data_pred2$pfev_fvc0)/data_pred2$cov22
