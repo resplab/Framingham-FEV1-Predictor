@@ -138,8 +138,8 @@ ui <- fluidPage(
       tabsetPanel(type="tabs",
                   tabPanel("FEV1",
                            shinyjs::hidden(div(id = "checkbox_FEV1", 
-                           checkboxInput("if_quit_FEV1", "Compare with Smoking Cessation", value = TRUE, width = NULL),
-                           checkboxInput("CI_FEV1_comparison", "Show Confidence Interval for Scenario Comparison", value = FALSE, width = NULL))),
+                           checkboxInput("if_quit_FEV1", "Compare with smoking cessation", value = FALSE, width = NULL),
+                           checkboxInput("CI_FEV1_comparison", "Confidence intervals for scenario comparison", value = FALSE, width = 600))),
                            plotlyOutput("plot_FEV1_decline"),
                            br(),
                            tableOutput("table_FEV1_decline")
@@ -147,8 +147,9 @@ ui <- fluidPage(
                            ),
                   
                   tabPanel("FEV1 % Predicted",
-                           shinyjs::hidden(div(id = "checkbox_FEV1_percentpred", checkboxInput("Pred_Interval_FEV1_Perc_Predi", "Show Prediction Interval", value = FALSE, width = NULL),
-                           checkboxInput("if_quit_FEV1_percentpred", "Show the effect of smoking cessation", value = FALSE, width = NULL))),
+                           shinyjs::hidden(div(id = "checkbox_FEV1_percentpred", 
+                           checkboxInput("if_quit_FEV1_percentpred", "Compare with smoking cessation", value = FALSE, width = NULL),
+                           checkboxInput("CI_FEV1_percpred", "Confidence intervals for scenario comparison", value = FALSE, width = 600))),
                            plotlyOutput("plot_FEV1_percentpred"),
                            br(),
                            tableOutput("table_FEV1_percentpred")
@@ -156,8 +157,8 @@ ui <- fluidPage(
                   
                   tabPanel("COPD Risk",
                            shinyjs::hidden(div(id = "checkbox_COPD_risk", 
-                           checkboxInput("if_quit_COPD_risk", "Show the effect of smoking cessation", value = FALSE, width = NULL),
-                           checkboxInput("CI_COPD_risk", "Show Bernoulli Confidence Interval", value = FALSE, width = NULL))),
+                           checkboxInput("if_quit_COPD_risk", "Show the effect of smoking cessation", value = FALSE, width = NULL))),
+                           checkboxInput("CI_COPD_risk", "Show Bernoulli Confidence Interval", value = FALSE, width = NULL),
                            plotlyOutput("COPD_risk"),
                            br(),
                            tableOutput("table_COPD_risk")
@@ -508,26 +509,34 @@ server <- function(input, output, session) {
       title = "Percent predicted FEV1 (%)",
       titlefont = f
     )
+    
     if (input$if_quit_FEV1_percentpred) {
-      ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
-               geom_ribbon(aes(ymin=percentpred_FEV1_lowerbound_CI_if_smoke, ymax= percentpred_upperbound_CI_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
-               geom_line(aes(y = percentpred_FEV1_lowerbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
-               geom_line(aes(y = percentpred_upperbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
+      shinyjs::enable("CI_FEV1_percpred")
+      p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
                geom_line(aes(y = percentpred_if_quit), color=lineColorNonSmoker, linetype=1) +
-               geom_ribbon(aes(ymin=percentpred_FEV1_lowerbound_CI_if_quit, ymax= percentpred_upperbound_CI_if_quit), linetype=2, alpha=0.1) +
-               geom_line(aes(y = percentpred_FEV1_lowerbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) +
-               geom_line(aes(y = percentpred_upperbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) +
                #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
                #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y="FEV1 Percent predicted (%)") +
-               theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+               theme_bw() 
+      if (input$CI_FEV1_percpred) {
+        p <- p + geom_ribbon(aes(ymin=percentpred_FEV1_lowerbound_CI_if_smoke, ymax= percentpred_upperbound_CI_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+          geom_line(aes(y = percentpred_FEV1_lowerbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
+          geom_line(aes(y = percentpred_upperbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
+          geom_ribbon(aes(ymin=percentpred_FEV1_lowerbound_CI_if_quit, ymax= percentpred_upperbound_CI_if_quit), linetype=2, alpha=0.1) +
+          geom_line(aes(y = percentpred_FEV1_lowerbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) +
+          geom_line(aes(y = percentpred_upperbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) 
+      }
+               
     } else {
-      ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
+      shinyjs::disable("CI_FEV1_percpred")
+      p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
                  geom_ribbon(aes(ymin=percentpred_lowerbound_PI, ymax=percentpred_upperbound_PI), linetype=2, alpha=0.1, fill=lineColorSmoker) +
                  geom_line(aes(y = percentpred_lowerbound_PI), color=errorLineColorSmoker, linetype=2) +
                  geom_line(aes(y = percentpred_upperbound_PI), color=errorLineColorSmoker, linetype=2) +
-                 theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
-    }
+                 theme_bw() 
+        }
+    ggplotly (p) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+    
     })
   
   
