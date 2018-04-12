@@ -89,7 +89,7 @@ ui <- fluidPage(
                  shinyjs::hidden(
                    div(id = "BloodTest",
                        numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
-                       numericInput("white_bc","White blood cells (10^9/L)", value = NULL, min = 25, max = 172, step = 1),
+                       numericInput("wbc","White blood cells (10^9/L)", value = NULL, min = 25, max = 172, step = 1),
                        numericInput("trig","Triglycerides (mg/dl)",value = NULL, min = 1, max = 2000, step = 1),
                        numericInput("alb","Albumin (g/L)",value = NULL, min = 10, max = 100, step = 1),
                        numericInput("glob","Globulin (g/L)",value = NULL, min = 1, max = 100, step = 1),
@@ -130,7 +130,7 @@ ui <- fluidPage(
         )
       ),
       actionButton("submit", "Run the prediction model"),
-      actionButton("reset_button", "Reset")
+      actionButton("reset_button", "Start over")
       ),
      
 
@@ -262,7 +262,7 @@ server <- function(input, output, session) {
                               input$alb,
                               input$glob,
                               input$alk_phos,
-                              input$white_bc,
+                              input$wbc,
                               input$qrs,
                               input$beer, #again, alcohol index is a derived variable (see prediction)
                               input$wine,
@@ -346,7 +346,7 @@ server <- function(input, output, session) {
                                 input$alb,
                                 input$glob,
                                 input$alk_phos,
-                                input$white_bc,
+                                input$wbc,
                                 input$qrs,
                                 input$beer, #alcohol is a derived variable from beer, wine and highballs
                                 input$wine,
@@ -389,7 +389,7 @@ server <- function(input, output, session) {
         input$alb,
         input$glob,
         input$alk_phos,
-        input$white_bc,
+        input$wbc,
         input$qrs,
         input$beer,
         input$wine,
@@ -411,7 +411,7 @@ server <- function(input, output, session) {
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.alb')] <- 'albumin'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.glob')] <- 'globulin'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.alk_phos')] <- 'ALP'
-    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.white_bc')] <- 'WBC'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.wbc')] <- 'WBC'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.qrs')] <- 'QRS_intv'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.beer')] <- 'beer'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.wine')] <- 'wine'
@@ -535,6 +535,7 @@ server <- function(input, output, session) {
   })
      
      observeEvent(input$submit, {
+      
       # Create a Progress object
       progress <- shiny::Progress$new()
       on.exit(progress$close())
@@ -575,10 +576,10 @@ server <- function(input, output, session) {
         # browser()
         
         #BINARY_CODE_DATAFRAME
-        BINARY_INPUT_NAMES <- c('fev1_0','age','trig','hema','alb','glob','alk_phos','white_bc','qrs','beer','wine','cocktail','height','smoke_year','daily_cigs','sex','ba_use','dys_exer','noc_s')
+        BINARY_INPUT_NAMES <- c('fev1_0','age','trig','hema','alb','glob','alk_phos','wbc','qrs','beer','wine','cocktail','height','smoke_year','daily_cigs','sex','ba_use','dys_exer','noc_s')
         BINARY_CODE_DATAFRAME <- data.frame(file_name(), BINARY_INPUT_NAMES)
         #FACTOR_NAMES_DATAFRAME
-        INPUTS <- c('fev1_0','age','trig','hema','alb','glob','alk_phos','white_bc','qrs',
+        INPUTS <- c('fev1_0','age','trig','hema','alb','glob','alk_phos','wbc','qrs',
                     'beer', # ?calculated from beer,wine,cocktail consumption?
                     'wine','cocktail','height',
                     'smoke_year','daily_cigs',
@@ -672,6 +673,27 @@ server <- function(input, output, session) {
      caption="FEV1/FVC Prediction",
      caption.placement = getOption("xtable.caption.placement", "top"))
      
+     #disabling inputs
+     shinyjs::disable("fev1_0") 
+     shinyjs::disable("age") 
+     shinyjs::disable("sex")  
+     shinyjs::disable("height") 
+     shinyjs::disable("daily_cigs") 
+     shinyjs::disable("smoke_year") 
+     shinyjs::disable("beer") 
+     shinyjs::disable("wine") 
+     shinyjs::disable("cocktail") 
+     shinyjs::disable("qrs") 
+     shinyjs::disable("ba_use") 
+     shinyjs::disable("dys_exer") 
+     shinyjs::disable("noc_s") 
+     shinyjs::disable("hema") 
+     shinyjs::disable("trig") 
+     shinyjs::disable("wbc") 
+     shinyjs::disable("alb") 
+     shinyjs::disable("glob") 
+     shinyjs::disable("alk_phos") 
+     shinyjs::disable("submit") 
      
      progress$set(message = "Done!", value = 1)
      

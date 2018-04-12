@@ -38,6 +38,15 @@
 # #FEV_calculate_lmer_fn - creates linear mixed-effects model based on user inputs
 # make_predictions - creates predictions and CI which are then used by plotly 
 
+#function for forcing probabilities between zero and one 
+asProbability <- function(p) {
+  if (p > 1) {result = 1}
+  else if (p < 0) {result = 0}
+  else {result = p}
+  
+  return (result)
+}
+
 #function for generating binary code
 BINARY_CODE_FROM_INPUTS <- function(
   fev1_0,
@@ -48,7 +57,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   alb,
   glob,
   alk_phos,
-  white_bc,
+  wbc,
   qrs,
   beer,
   wine,
@@ -69,7 +78,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   if(is.na(alb))      {alb = 0} else {alb = 1}
   if(is.na(glob))     {glob = 0} else {glob = 1}
   if(is.na(alk_phos)) {alk_phos = 0} else {alk_phos = 1}
-  if(is.na(white_bc)) {white_bc = 0} else {white_bc = 1}
+  if(is.na(wbc)) {wbc = 0} else {wbc = 1}
   if(is.na(qrs))      {qrs = 0} else {qrs = 1}
   if(is.na(beer))     {beer = 0} else {beer = 1}
   if(is.na(wine))     {wine = 0} else {wine = 1}
@@ -89,7 +98,7 @@ BINARY_CODE_FROM_INPUTS <- function(
           alb,
           glob,
           alk_phos,
-          white_bc,
+          wbc,
           qrs,
           beer,
           wine,
@@ -111,7 +120,7 @@ FEV_input_labels <- function() {
     'alb',
     'glob',
     'alk_phos',
-    'white_bc',
+    'wbc',
     'qrs',
     'beer',
     'wine',
@@ -422,13 +431,13 @@ make_predictions <- function(respVar, lmfin, predictors) {
     
     # adding coloumns for smoking vs. quitting scenario
     # we assume a bernulli distribution for uncertainty around probablity. SE = p (1 - p)
-    data_pred_fin$COPD_risk_if_smoke <- data_if_smoke$COPD_risk
+    data_pred_fin$COPD_risk_if_smoke <- (data_if_smoke$COPD_risk)
     SE_COPD_risk_if_smoke <- sqrt(data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk) / 13567) #13567 is n
     data_pred_fin$COPD_risk_lowerbound_if_smoke <- (data_if_smoke$COPD_risk - 1.96 *  SE_COPD_risk_if_smoke) 
     data_pred_fin$COPD_risk_upperbound_if_smoke <- (data_if_smoke$COPD_risk + 1.96 *  SE_COPD_risk_if_smoke) 
     
     
-    data_pred_fin$COPD_risk_if_quit <- data_if_quit$COPD_risk
+    data_pred_fin$COPD_risk_if_quit <- (data_if_quit$COPD_risk)
     SE_COPD_risk_if_quit <- sqrt (data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk) / 13567)
     data_pred_fin$COPD_risk_lowerbound_if_quit <- (data_if_quit$COPD_risk - 1.96 * SE_COPD_risk_if_quit)
     data_pred_fin$COPD_risk_upperbound_if_quit <- (data_if_quit$COPD_risk + 1.96 * SE_COPD_risk_if_quit)
@@ -441,7 +450,6 @@ make_predictions <- function(respVar, lmfin, predictors) {
     
   }
       
-  #return(data_pred) #debug Amin. TODO
   return(data_pred_fin)
 }
 
