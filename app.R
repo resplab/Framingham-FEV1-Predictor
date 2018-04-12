@@ -137,8 +137,9 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(type="tabs",
                   tabPanel("FEV1",
-                           shinyjs::hidden(div(id = "checkbox_FEV1", checkboxInput("Pred_Interval_FEV1", "Show Prediction Interval", value = FALSE, width = NULL),
-                           checkboxInput("if_quit_FEV1", "Compare with Smoking Cessation", value = TRUE, width = NULL))),
+                           shinyjs::hidden(div(id = "checkbox_FEV1", 
+                           checkboxInput("if_quit_FEV1", "Compare with Smoking Cessation", value = TRUE, width = NULL),
+                           checkboxInput("CI_FEV1_comparison", "Show Confidence Interval for Scenario Comparison", value = FALSE, width = NULL))),
                            plotlyOutput("plot_FEV1_decline"),
                            br(),
                            tableOutput("table_FEV1_decline")
@@ -461,30 +462,35 @@ server <- function(input, output, session) {
       titlefont = f
     )
    if (input$if_quit_FEV1) {  
-   ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1_if_smoke), color=lineColorSmoker, linetype=1) +
-               geom_ribbon(aes(ymin=FEV1_lowerbound_CI_if_smoke, ymax= upperbound_CI_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
-               geom_line(aes(y = FEV1_lowerbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
-               geom_line(aes(y = upperbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
-              
+     shinyjs::enable ("CI_FEV1_comparison")
+     p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1_if_smoke), color=lineColorSmoker, linetype=1) +
                geom_line(aes(y = predicted_FEV1_if_quit), color=lineColorNonSmoker, linetype=1) +
-               geom_ribbon(aes(ymin=FEV1_lowerbound_CI_if_quit, ymax= upperbound_CI_if_quit), linetype=2, alpha=0.1) +
-               geom_line(aes(y = FEV1_lowerbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) +
-               geom_line(aes(y = upperbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) +
-              
+            
                #annotate("text", 1, 0.5, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
                #annotate("text", 1.15, 0.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y=ylab) +
-               theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
-   } else {
-     ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1), color=lineColorSmoker, linetype=1) +
+               theme_bw() 
+      if (input$CI_FEV1_comparison) {
+        p <- p + geom_ribbon(aes(ymin=FEV1_lowerbound_CI_if_smoke, ymax= upperbound_CI_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+          geom_line(aes(y = FEV1_lowerbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
+          geom_line(aes(y = upperbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
+          geom_ribbon(aes(ymin=FEV1_lowerbound_CI_if_quit, ymax= upperbound_CI_if_quit), linetype=2, alpha=0.1) +
+          geom_line(aes(y = FEV1_lowerbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) +
+          geom_line(aes(y = upperbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) 
+      }
+    } else {
+     shinyjs::disable ("CI_FEV1_comparison")
+     p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1), color=lineColorSmoker, linetype=1) +
                 geom_ribbon(aes(ymin=lowerbound_PI, ymax= upperbound_PI), linetype=2, alpha=0.1, fill=lineColorSmoker) +
                 geom_line(aes(y = lowerbound_PI), color=errorLineColorSmoker, linetype=2) +
                 geom_line(aes(y = upperbound_PI), color=errorLineColorSmoker, linetype=2) +
                 #annotate("text", 1, 0.5, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
                 #annotate("text", 1.15, 0.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                 labs(x=xlab, y=ylab) +
-                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
-   }
+                theme_bw()
+     }
+    ggplotly (p) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+
    })
      
   FEV1_percent_pred_plot <- reactive ({

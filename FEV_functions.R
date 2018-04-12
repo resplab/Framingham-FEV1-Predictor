@@ -349,16 +349,16 @@ make_predictions <- function(respVar, lmfin, predictors) {
   cov12.rand <-v.int.rand+data_pred2$year*cov.int.yr.rand
   cov22.rand <-v.int.rand#+v.err
   
-  print("v.yr")
-  print(v.yr)
-  print("v.yr.rand")
-  print(v.yr.rand)
-  print("v.int")
-  print(v.int)
-  print("v.int.rand")
-  print(v.int.rand)
-  print("v.err")
-  print (v.err)
+  # print("v.yr") #debug
+  # print(v.yr) #debug
+  # print("v.yr.rand")
+  # print(v.yr.rand)
+  # print("v.int")
+  # print(v.int)
+  # print("v.int.rand")
+  # print(v.int.rand)
+  # print("v.err")
+  # print (v.err)
   
   
   data_pred2<-cbind(data_pred2, cov11, cov12, cov22, cov11.rand, cov12.rand, cov22.rand )
