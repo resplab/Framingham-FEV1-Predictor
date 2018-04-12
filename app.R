@@ -154,8 +154,9 @@ ui <- fluidPage(
                   ),
                   
                   tabPanel("COPD Risk",
-                           shinyjs::hidden(div(id = "checkbox_COPD_risk", checkboxInput("CI_COPD_Risk", "Show Bernoulli Confidence Interval", value = FALSE, width = NULL),
-                           checkboxInput("if_quit_COPD_risk", "Show the effect of smoking cessation", value = FALSE, width = NULL))),
+                           shinyjs::hidden(div(id = "checkbox_COPD_risk", 
+                           checkboxInput("if_quit_COPD_risk", "Show the effect of smoking cessation", value = FALSE, width = NULL),
+                           checkboxInput("CI_COPD_risk", "Show Bernoulli Confidence Interval", value = FALSE, width = NULL))),
                            plotlyOutput("COPD_risk"),
                            br(),
                            tableOutput("table_COPD_risk")
@@ -540,30 +541,29 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    if (input$if_quit_COPD_risk) { 
-      ggplotly(ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
-                 geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
-                 geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
-                 geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
-                 geom_line(aes(y = COPD_risk_if_quit*100), color=lineColorNonSmoker, linetype=1) +
-                 geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_quit*100, ymax = COPD_risk_upperbound_if_quit*100), linetype=2, alpha=0.1) +
-                 geom_line(aes(y = COPD_risk_lowerbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
-                 geom_line(aes(y = COPD_risk_upperbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
-                 #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
-                 #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
-                 labs(x=xlab, y="COPD Risk (%)") +
-                 theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
-    } else {
-      ggplotly(ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
-                 geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
-                 geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
-                 geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
-                 #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
-                 #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
-                 labs(x=xlab, y="COPD Risk (%)") +
-                 theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+    p <- ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
+
+      labs(x=xlab, y="COPD Risk (%)") +
+      theme_bw() 
+    
+    if (input$CI_COPD_risk) {
+      p <- p + geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+        geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
+        geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) 
+    }
+  
+  if (input$if_quit_COPD_risk) { 
+    p <- p +  geom_line(aes(y = COPD_risk_if_quit*100), color=lineColorNonSmoker, linetype=1) 
       
-      }
+    if (input$CI_COPD_risk) {
+      p <- p + geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_quit*100, ymax = COPD_risk_upperbound_if_quit*100), linetype=2, alpha=0.1) +
+        geom_line(aes(y = COPD_risk_lowerbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
+        geom_line(aes(y = COPD_risk_upperbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) 
+    }
+  }
+
+  ggplotly(p) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+
   })
      
      observeEvent(input$submit, {
