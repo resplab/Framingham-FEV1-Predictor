@@ -421,7 +421,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_if_smoke <- subset(data_pred_fin, smoking == 1)
       data_if_quit <- subset(data_pred_fin, smoking == 0)
       data_pred_fin <- subset(data_pred_fin, smoking == 0)
-      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr,  upperbound_CI, lowerbound_CI, percentpred, percentpred_upperbound_CI, percentpred_lowerbound_CI))
+      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr,  upperbound_CI, lowerbound_CI, percentpred_upperbound_CI, percentpred_lowerbound_CI))
       
       #adding coloumns for smoking vs. quitting scenario
       data_pred_fin$predicted_FEV1_if_smoke <- data_if_smoke$predicted_FEV1
@@ -458,14 +458,19 @@ make_predictions <- function(respVar, lmfin, predictors) {
     data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob)
     data_pred_fin <- as.data.frame (data_pred_fin)
     colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","COPD_risk")
-
+    
+    SE_COPD_risk <- sqrt(data_pred_fin$COPD_risk * (1 - data_pred_fin$COPD_risk) / 13567) #13567 is n
+    data_pred_fin$COPD_risk_lowerbound <- (data_pred_fin$COPD_risk - 1.96 *  SE_COPD_risk) 
+    data_pred_fin$COPD_risk_upperbound <- (data_pred_fin$COPD_risk + 1.96 *  SE_COPD_risk) 
+    
     #reducing rows in data_pred_fin
     data_if_smoke <- subset(data_pred_fin, smoking == 1)
     data_if_quit <- subset(data_pred_fin, smoking == 0)
     
     data_pred_fin <- subset(data_pred_fin, smoking == 0)
-    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr, COPD_risk))
+    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr))
     
+
     # adding coloumns for smoking vs. quitting scenario
     # we assume a bernulli distribution for uncertainty around probablity. SE = p (1 - p)
     data_pred_fin$COPD_risk_if_smoke <- (data_if_smoke$COPD_risk)

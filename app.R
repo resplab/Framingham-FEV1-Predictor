@@ -529,7 +529,7 @@ server <- function(input, output, session) {
                
     } else {
       shinyjs::disable("CI_FEV1_percpred")
-      p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
+      p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred), color=lineColorSmoker, linetype=1) +
                  geom_ribbon(aes(ymin=percentpred_lowerbound_PI, ymax=percentpred_upperbound_PI), linetype=2, alpha=0.1, fill=lineColorSmoker) +
                  geom_line(aes(y = percentpred_lowerbound_PI), color=errorLineColorSmoker, linetype=2) +
                  geom_line(aes(y = percentpred_upperbound_PI), color=errorLineColorSmoker, linetype=2) +
@@ -556,15 +556,15 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    p <- ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
+    p <- ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk*100), color=lineColorSmoker, linetype=1) +
 
       labs(x=xlab, y="COPD Risk (%)") +
       theme_bw() 
     
     if (input$CI_COPD_risk) {
-      p <- p + geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
-        geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
-        geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) 
+      p <- p + geom_ribbon(aes(ymin = COPD_risk_lowerbound*100, ymax = COPD_risk_upperbound*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+        geom_line(aes(y = COPD_risk_lowerbound*100), color = errorLineColorSmoker, linetype=2) +
+        geom_line(aes(y = COPD_risk_upperbound*100), color = errorLineColorSmoker, linetype=2) 
     }
   
   if (input$if_quit_COPD_risk) { 
