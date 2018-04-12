@@ -147,7 +147,7 @@ ui <- fluidPage(
                   
                   tabPanel("FEV1 % Predicted",
                            shinyjs::hidden(div(id = "checkbox_FEV1_percentpred", checkboxInput("Pred_Interval_FEV1_Perc_Predi", "Show Prediction Interval", value = FALSE, width = NULL),
-                           checkboxInput("if_quit_FEV1_percentpred", "Compare with Smoking Cessation", value = TRUE, width = NULL))),
+                           checkboxInput("if_quit_FEV1_percentpred", "Show the effect of smoking cessation", value = FALSE, width = NULL))),
                            plotlyOutput("plot_FEV1_percentpred"),
                            br(),
                            tableOutput("table_FEV1_percentpred")
@@ -155,7 +155,7 @@ ui <- fluidPage(
                   
                   tabPanel("COPD Risk",
                            shinyjs::hidden(div(id = "checkbox_COPD_risk", checkboxInput("CI_COPD_Risk", "Show Bernoulli Confidence Interval", value = FALSE, width = NULL),
-                           checkboxInput("if_quit_COPD_risk", "Compare with Smoking Cessation", value = TRUE, width = NULL))),
+                           checkboxInput("if_quit_COPD_risk", "Show the effect of smoking cessation", value = FALSE, width = NULL))),
                            plotlyOutput("COPD_risk"),
                            br(),
                            tableOutput("table_COPD_risk")
@@ -459,7 +459,7 @@ server <- function(input, output, session) {
       title = "FEV1 (mL)",
       titlefont = f
     )
-    
+   if (input$if_quit_FEV1) {  
    ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1_if_smoke), color=lineColorSmoker, linetype=1) +
                geom_ribbon(aes(ymin=FEV1_lowerbound_CI_if_smoke, ymax= upperbound_CI_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
                geom_line(aes(y = FEV1_lowerbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
@@ -474,7 +474,17 @@ server <- function(input, output, session) {
                #annotate("text", 1.15, 0.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y=ylab) +
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
-  })
+   } else {
+     ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1), color=lineColorSmoker, linetype=1) +
+                geom_ribbon(aes(ymin=lowerbound_PI, ymax= upperbound_PI), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+                geom_line(aes(y = lowerbound_PI), color=errorLineColorSmoker, linetype=2) +
+                geom_line(aes(y = upperbound_PI), color=errorLineColorSmoker, linetype=2) +
+                #annotate("text", 1, 0.5, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
+                #annotate("text", 1.15, 0.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+                labs(x=xlab, y=ylab) +
+                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+   }
+   })
      
   FEV1_percent_pred_plot <- reactive ({
 
@@ -491,22 +501,27 @@ server <- function(input, output, session) {
       title = "Percent predicted FEV1 (%)",
       titlefont = f
     )
-    
-    ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
+    if (input$if_quit_FEV1_percentpred) {
+      ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
                geom_ribbon(aes(ymin=percentpred_FEV1_lowerbound_CI_if_smoke, ymax= percentpred_upperbound_CI_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
                geom_line(aes(y = percentpred_FEV1_lowerbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
                geom_line(aes(y = percentpred_upperbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
-               
                geom_line(aes(y = percentpred_if_quit), color=lineColorNonSmoker, linetype=1) +
                geom_ribbon(aes(ymin=percentpred_FEV1_lowerbound_CI_if_quit, ymax= percentpred_upperbound_CI_if_quit), linetype=2, alpha=0.1) +
                geom_line(aes(y = percentpred_FEV1_lowerbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) +
                geom_line(aes(y = percentpred_upperbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) +
-               
                #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
                #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
                labs(x=xlab, y="FEV1 Percent predicted (%)") +
                theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
-  })
+    } else {
+      ggplotly(ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
+                 geom_ribbon(aes(ymin=percentpred_lowerbound_PI, ymax=percentpred_upperbound_PI), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+                 geom_line(aes(y = percentpred_lowerbound_PI), color=errorLineColorSmoker, linetype=2) +
+                 geom_line(aes(y = percentpred_upperbound_PI), color=errorLineColorSmoker, linetype=2) +
+                 theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+    }
+    })
   
   
   COPD_risk_plot <- reactive ({
@@ -525,19 +540,30 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    ggplotly(ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
-               geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
-               geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
-               geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
-               geom_line(aes(y = COPD_risk_if_quit*100), color=lineColorNonSmoker, linetype=1) +
-               geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_quit*100, ymax = COPD_risk_upperbound_if_quit*100), linetype=2, alpha=0.1) +
-               geom_line(aes(y = COPD_risk_lowerbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
-               geom_line(aes(y = COPD_risk_upperbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
-               
-               #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
-               #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
-               labs(x=xlab, y="COPD Risk (%)") +
-               theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+    if (input$if_quit_COPD_risk) { 
+      ggplotly(ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
+                 geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+                 geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
+                 geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
+                 geom_line(aes(y = COPD_risk_if_quit*100), color=lineColorNonSmoker, linetype=1) +
+                 geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_quit*100, ymax = COPD_risk_upperbound_if_quit*100), linetype=2, alpha=0.1) +
+                 geom_line(aes(y = COPD_risk_lowerbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
+                 geom_line(aes(y = COPD_risk_upperbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2) +
+                 #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
+                 #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+                 labs(x=xlab, y="COPD Risk (%)") +
+                 theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+    } else {
+      ggplotly(ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
+                 geom_ribbon(aes(ymin = COPD_risk_lowerbound_if_smoke*100, ymax = COPD_risk_upperbound_if_smoke*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+                 geom_line(aes(y = COPD_risk_lowerbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
+                 geom_line(aes(y = COPD_risk_upperbound_if_smoke*100), color = errorLineColorSmoker, linetype=2) +
+                 #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
+                 #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
+                 labs(x=xlab, y="COPD Risk (%)") +
+                 theme_bw()) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
+      
+      }
   })
      
      observeEvent(input$submit, {
@@ -702,9 +728,11 @@ server <- function(input, output, session) {
      shinyjs::disable("submit") 
      
 
-     shinyjs::toggle("checkbox_FEV1_percentpred")
-     shinyjs::toggle("checkbox_COPD_risk")
-     shinyjs::toggle("checkbox_FEV1")
+     if (input$daily_cigs>0) {
+       shinyjs::toggle("checkbox_FEV1_percentpred")
+       shinyjs::toggle("checkbox_COPD_risk")
+       shinyjs::toggle("checkbox_FEV1")
+     }
      
      progress$set(message = "Done!", value = 1)
      

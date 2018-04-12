@@ -344,6 +344,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
   v.yr.rand <- var(rand_yr)
   cov.int.yr.rand <- cov(rand_int, rand_yr)
   
+  #TODO verify variances for random effect confidence intervals
   cov11.rand <-v.int.rand+2*data_pred2$year*cov.int.yr.rand+data_pred2$year2*v.yr.rand#+v.err
   cov12.rand <-v.int.rand+data_pred2$year*cov.int.yr.rand
   cov22.rand <-v.int.rand#+v.err
@@ -420,7 +421,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_if_smoke <- subset(data_pred_fin, smoking == 1)
       data_if_quit <- subset(data_pred_fin, smoking == 0)
       data_pred_fin <- subset(data_pred_fin, smoking == 0)
-      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr, predicted_FEV1, upperbound_PI, lowerbound_PI,  upperbound_CI, lowerbound_CI, percentpred, percentpred_upperbound_PI, percentpred_lowerbound_PI, percentpred_upperbound_CI, percentpred_lowerbound_CI))
+      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr,  upperbound_CI, lowerbound_CI, percentpred, percentpred_upperbound_CI, percentpred_lowerbound_CI))
       
       #adding coloumns for smoking vs. quitting scenario
       data_pred_fin$predicted_FEV1_if_smoke <- data_if_smoke$predicted_FEV1
