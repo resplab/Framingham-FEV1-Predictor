@@ -1,0 +1,10 @@
+
+# ← Start Here
+
+Enter patient data in the left panel. 
+
+For best accuracy, enter all inputs. When all inputs are present, the full validated model in the publication is used. 
+
+When fewer inputs are available, the appropriate reduced model is used for prediciton. Please refer to the paper for methodological details.
+
+Inputs marked with <span style="color:red">&#42;</span> are required. 
