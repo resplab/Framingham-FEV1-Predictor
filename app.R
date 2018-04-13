@@ -129,6 +129,11 @@ ui <- fluidPage(
             HTML(paste(tags$span(style="color:red", "QRS (0.01s) out of range ")))
         )
       ),
+      shinyjs::hidden(
+        div(id = "alcoholIntake",
+            HTML(paste(tags$span(style="color:red", "Please enter either all or none of alcohol intake variables")))
+        )
+      ),
       actionButton("submit", "Run the prediction model"),
       actionButton("reset_button", "Start over")
     ),
@@ -213,9 +218,11 @@ server <- function(input, output, session) {
                    shinyjs::toggle(id = "SaveLoad", anim = TRUE)) 
   
   observe({
-    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "")) {
+    alcoholInputTest <- as.numeric(is.na(input$beer) + is.na(input$wine) + is.na(input$cocktail))
+
+    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) )) {
       shinyjs::disable("submit")
-    }else{
+    }else {
       shinyjs::enable("submit")
     }
   })  
@@ -251,6 +258,17 @@ server <- function(input, output, session) {
         shinyjs::show (id = "height_qrs", anim = TRUE)}
       else shinyjs::hide (id = "height_qrs", anim = TRUE)
     }
+  })  
+  
+  observe({
+    alcoholInputTest <- as.numeric(is.na(input$beer) + is.na(input$wine) + is.na(input$cocktail))
+    if (alcoholInputTest > 0 && alcoholInputTest < 3) {
+        shinyjs::show (id = "alcoholIntake", anim = TRUE)
+      }
+      else {
+        shinyjs::hide (id = "alcoholIntake", anim = TRUE)
+      }
+        
   })  
   
   # Output Functions-----------------------------------------------------------------------------------------------------------
@@ -556,7 +574,7 @@ server <- function(input, output, session) {
       titlefont = f
     )
     
-    if (input$daily_cigs == 0) {
+    if (input$daily_cigs == 0 && !is.na(input$daily_cigs)) {
       p <- ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk*100), color=lineColorNonSmoker, linetype=1) +
         labs(x=xlab, y="COPD Risk (%)") +
         theme_bw() 
@@ -760,7 +778,7 @@ server <- function(input, output, session) {
     shinyjs::disable("submit") 
     
     
-    if (input$daily_cigs>0) {
+    if (input$daily_cigs>0 && !is.na(input$daily_cigs)) {
       shinyjs::toggle("checkbox_FEV1_percentpred")
       shinyjs::toggle("checkbox_COPD_risk")
       shinyjs::toggle("checkbox_FEV1")
