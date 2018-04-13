@@ -442,8 +442,8 @@ make_predictions <- function(respVar, lmfin, predictors) {
 
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
     
-    prob <- pnorm ((0.7-((pred2*0.09908784)+0.7904786))/se2)
-    
+    z_score <- (0.7 - pred2*0.09908784 - 0.7904786) / (se2*0.09908784)
+    prob <- pnorm (z_score)
     #prob<-pnorm(((0.7-0.7904786)/0.09908784-pred2)/se2)
     
     data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob)
