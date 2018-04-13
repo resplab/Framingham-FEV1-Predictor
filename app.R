@@ -463,7 +463,7 @@ server <- function(input, output, session) {
       titlefont = f
     )
     if (input$if_quit_FEV1) {  
-      shinyjs::enable ("CI_FEV1_comparison")
+      shinyjs::show ("CI_FEV1_comparison")
       p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1_if_smoke), color=lineColorSmoker, linetype=1) +
         geom_line(aes(y = predicted_FEV1_if_quit), color=lineColorNonSmoker, linetype=1) +
         
@@ -480,7 +480,7 @@ server <- function(input, output, session) {
           geom_line(aes(y = upperbound_CI_if_quit), color=errorLineColorNonSmoker, linetype=2) 
       }
     } else {
-      shinyjs::disable ("CI_FEV1_comparison")
+      shinyjs::hide ("CI_FEV1_comparison")
       p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1), color=lineColorSmoker, linetype=1) +
         geom_ribbon(aes(ymin=lowerbound_PI, ymax= upperbound_PI), linetype=2, alpha=0.1, fill=lineColorSmoker) +
         geom_line(aes(y = lowerbound_PI), color=errorLineColorSmoker, linetype=2) +
@@ -511,7 +511,7 @@ server <- function(input, output, session) {
     )
     
     if (input$if_quit_FEV1_percentpred) {
-      shinyjs::enable("CI_FEV1_percpred")
+      shinyjs::show("CI_FEV1_percpred")
       p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
         geom_line(aes(y = percentpred_if_quit), color=lineColorNonSmoker, linetype=1) +
         #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
@@ -528,7 +528,7 @@ server <- function(input, output, session) {
       }
       
     } else {
-      shinyjs::disable("CI_FEV1_percpred")
+      shinyjs::hide("CI_FEV1_percpred")
       p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred), color=lineColorSmoker, linetype=1) +
         geom_ribbon(aes(ymin=percentpred_lowerbound_PI, ymax=percentpred_upperbound_PI), linetype=2, alpha=0.1, fill=lineColorSmoker) +
         geom_line(aes(y = percentpred_lowerbound_PI), color=errorLineColorSmoker, linetype=2) +
@@ -562,7 +562,7 @@ server <- function(input, output, session) {
         theme_bw() 
       
       if (input$CI_COPD_risk) {
-        p <- p + geom_ribbon(aes(ymin = COPD_risk_lowerbound*100, ymax = COPD_risk_upperbound*100), linetype=2, alpha=0.1, fill=lineColorSmoker) +
+        p <- p + geom_ribbon(aes(ymin = COPD_risk_lowerbound*100, ymax = COPD_risk_upperbound*100), linetype=2, alpha=0.1, fill=lineColorNonSmoker) +
           geom_line(aes(y = COPD_risk_lowerbound*100), color = errorLineColorNonSmoker, linetype=2) +
           geom_line(aes(y = COPD_risk_upperbound*100), color = errorLineColorNonSmoker, linetype=2) 
       }
