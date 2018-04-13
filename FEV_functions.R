@@ -330,9 +330,9 @@ make_predictions <- function(respVar, lmfin, predictors) {
   }
 
   #Calculation the bivariate correlation between baseline and future FEV1 value, used for predition interval
-  cov11<-v.int+2*data_pred2$year*cov.int.yr+data_pred2$year2*v.yr#+v.err
+  cov11<-v.int+2*data_pred2$year*cov.int.yr+data_pred2$year2*v.yr+v.err
   cov12<-v.int+data_pred2$year*cov.int.yr
-  cov22<-v.int#+v.err
+  cov22<-v.int+v.err
 
   #Calculation the bivariate correlation between baseline and future FEV1 value, used for confidence interval
   rand_eff <- ranef(lmfin)
@@ -345,9 +345,9 @@ make_predictions <- function(respVar, lmfin, predictors) {
   cov.int.yr.rand <- cov(rand_int, rand_yr)
   
   #TODO verify variances for random effect confidence intervals
-  cov11.rand <-v.int.rand+2*data_pred2$year*cov.int.yr.rand+data_pred2$year2*v.yr.rand#+v.err
+  cov11.rand <-v.int.rand+2*data_pred2$year*cov.int.yr.rand+data_pred2$year2*v.yr.rand+v.err
   cov12.rand <-v.int.rand+data_pred2$year*cov.int.yr.rand
-  cov22.rand <-v.int.rand#+v.err
+  cov22.rand <-v.int.rand+v.err
   
   data_pred2<-cbind(data_pred2, cov11, cov12, cov22, cov11.rand, cov12.rand, cov22.rand )
   

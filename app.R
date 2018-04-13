@@ -95,7 +95,7 @@ ui <- fluidPage(
       shinyjs::hidden(
         div(id = "SaveLoad",
             downloadButton("save_inputs_button", "Save Inputs"),
-            fileInput("load_inputs_button","Choose CSV File to Load", accept = c("text/csv","text/comma-separated-values,text/plain",".csv"), buttonLabel = "Load Inputs...")
+            fileInput("load_inputs_button","Choose CSV File to Load", accept = c("text/csv","text/comma-separated-values,text/plain",".csv"), buttonLabel = "Load Inputs")
         )                 
       ),
       
@@ -168,8 +168,9 @@ ui <- fluidPage(
                   # tabPanel("Model Summary",
                   #           verbatimTextOutput("lmer_summary")),
                   
-                  tabPanel("Disclaimer",  includeMarkdown("./disclaimer.rmd")),
-                  tabPanel("About",  includeMarkdown("./about.rmd"))
+                  tabPanel("Terms",  includeMarkdown("./disclaimer.rmd")),
+                  tabPanel("About",  includeMarkdown("./about.rmd"), 
+                           imageOutput("logos"))
                   #textOutput("binary") #for debug; monitoring binary value. Amin
       )
     )
@@ -268,7 +269,17 @@ server <- function(input, output, session) {
   
   # Output Functions-----------------------------------------------------------------------------------------------------------
 
-  
+  output$logos <- renderImage({
+    width  <- session$clientData$output_logos_width
+    height <- session$clientData$output_logos_height
+    # Return a list containing the filename
+    list(src = "./logos2.png",
+         contentType = 'image/png',
+         width = width,
+         alt = "This is alternate text")
+  }, deleteFile = FALSE)
+
+
   #moved here to make it constanly recalculate binary code. Amin
   
   file_name <-  reactive(
