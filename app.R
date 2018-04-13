@@ -171,7 +171,7 @@ ui <- fluidPage(
                   tabPanel("Terms",  includeMarkdown("./disclaimer.rmd")),
                   tabPanel("About",  includeMarkdown("./about.rmd"), 
                            imageOutput("logos"))
-                  #textOutput("binary") #for debug; monitoring binary value. Amin
+                  #textOutput("binary")) #for debug; monitoring binary value. Amin
       )
     )
   )

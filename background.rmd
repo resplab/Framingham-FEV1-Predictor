@@ -9,5 +9,4 @@ When fewer inputs are available, the appropriate reduced model is used for predi
 
 Inputs marked with <span style="color:red">&#42;</span> are required. 
 
-<span style="color:Tomato">Warning: This tool SHOULD NOT BE USED to replace a diagnostic or treatment decision made by a physician
-</span>  
+<span style="color:Tomato">Warning: This tool SHOULD NOT BE USED to replace a diagnostic or treatment decision made by a physician </span>
