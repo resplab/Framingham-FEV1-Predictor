@@ -1,6 +1,3 @@
-#moved width outside the mainPanel
-#edited main panel, particularly the Help Tab - got rid of the text that was simply typed into R file main panel
-#added two libraries - rmarkdown and knitr
 library(shiny)
 library(shinythemes)
 library(ggplot2)
@@ -8,10 +5,6 @@ library(plotly)
 library(lme4) # to build linear mixed model
 library(lmerTest) # for outputing test results from the mixed model
 library(plyr) #for merging data
-#library(MuMIn)
-#library(fBasics)
-#library(ROCR)
-#library(pROC)
 library(data.table)
 library(rmarkdown) #for markdown file
 library(knitr) #for markdown file
@@ -25,6 +18,7 @@ labelMandatory <- function(label) {
     span("*", class = "mandatory_star")
   )
 }
+
 
 appCSS <-
   ".mandatory_star { color: red; }"
@@ -55,9 +49,9 @@ ui <- fluidPage(
   sidebarLayout(
     
     sidebarPanel(
-      helpText("Enter as many patient characteristics as possible.",
-               "When all fields are completed, a validated model will make predictions.",
-               "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
+      #helpText("Enter as many patient characteristics as possible.",
+       #        "When all fields are completed, a validated model will make predictions.",
+        #       "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
       numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), value = NULL, min = 1, max = 5, step = 0.25),
       numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 100, step = 1),
       selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = NULL),
@@ -145,6 +139,7 @@ ui <- fluidPage(
                            shinyjs::hidden(div(id = "checkbox_FEV1", 
                                                checkboxInput("if_quit_FEV1", "Compare with smoking cessation", value = FALSE, width = NULL),
                                                checkboxInput("CI_FEV1_comparison", "Confidence intervals for scenario comparison", value = FALSE, width = 600))),
+                           div(id = "background", includeMarkdown("./background.rmd")),
                            plotlyOutput("plot_FEV1_decline"),
                            br(),
                            tableOutput("table_FEV1_decline")
@@ -272,12 +267,7 @@ server <- function(input, output, session) {
   })  
   
   # Output Functions-----------------------------------------------------------------------------------------------------------
-  
-  output$inputParam<-renderUI({
-    
-    
-  })
-  
+
   
   #moved here to make it constanly recalculate binary code. Amin
   
@@ -618,6 +608,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$submit, {
     
+    shinyjs::hide("background")
     # Create a Progress object
     progress <- shiny::Progress$new()
     on.exit(progress$close())
