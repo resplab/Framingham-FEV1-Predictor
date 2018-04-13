@@ -330,9 +330,9 @@ make_predictions <- function(respVar, lmfin, predictors) {
   }
 
   #Calculation the bivariate correlation between baseline and future FEV1 value, used for predition interval
-  cov11<-v.int+2*data_pred2$year*cov.int.yr+data_pred2$year2*v.yr+v.err
+  cov11<-v.int+2*data_pred2$year*cov.int.yr+data_pred2$year2*v.yr#+v.err
   cov12<-v.int+data_pred2$year*cov.int.yr
-  cov22<-v.int+v.err
+  cov22<-v.int#+v.err
 
   #Calculation the bivariate correlation between baseline and future FEV1 value, used for confidence interval
   rand_eff <- ranef(lmfin)
@@ -349,23 +349,12 @@ make_predictions <- function(respVar, lmfin, predictors) {
   cov12.rand <-v.int.rand+data_pred2$year*cov.int.yr.rand
   cov22.rand <-v.int.rand#+v.err
   
-  # print("v.yr") #debug
-  # print(v.yr) #debug
-  # print("v.yr.rand")
-  # print(v.yr.rand)
-  # print("v.int")
-  # print(v.int)
-  # print("v.int.rand")
-  # print(v.int.rand)
-  # print("v.err")
-  # print (v.err)
-  
-  
   data_pred2<-cbind(data_pred2, cov11, cov12, cov22, cov11.rand, cov12.rand, cov22.rand )
   
   #relate baseline fev1 to future fev1 to make final prediction
   if (respVar == 'fev1') { 
     pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_0-data_pred2$pfev0)/data_pred2$cov22
+    
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
     se2.rand <- sqrt(data_pred2$cov11.rand-data_pred2$cov12.rand*data_pred2$cov12.rand/data_pred2$cov22.rand)
     
@@ -453,13 +442,15 @@ make_predictions <- function(respVar, lmfin, predictors) {
 
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
     
-    prob<-pnorm(((0.7-0.7904786)/0.09908784-pred2)/se2)
+    prob <- pnorm ((0.7-((pred2*0.09908784)+0.7904786))/se2)
+    
+    #prob<-pnorm(((0.7-0.7904786)/0.09908784-pred2)/se2)
     
     data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob)
     data_pred_fin <- as.data.frame (data_pred_fin)
     colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","COPD_risk")
     
-    SE_COPD_risk <- sqrt(data_pred_fin$COPD_risk * (1 - data_pred_fin$COPD_risk) / 13567) #13567 is n
+    SE_COPD_risk <- sqrt(data_pred_fin$COPD_risk * (1 - data_pred_fin$COPD_risk) / length(rand_int)) #length(rand_int) is n
     data_pred_fin$COPD_risk_lowerbound <- (data_pred_fin$COPD_risk - 1.96 *  SE_COPD_risk) 
     data_pred_fin$COPD_risk_upperbound <- (data_pred_fin$COPD_risk + 1.96 *  SE_COPD_risk) 
     
@@ -474,13 +465,13 @@ make_predictions <- function(respVar, lmfin, predictors) {
     # adding coloumns for smoking vs. quitting scenario
     # we assume a bernulli distribution for uncertainty around probablity. SE = p (1 - p)
     data_pred_fin$COPD_risk_if_smoke <- (data_if_smoke$COPD_risk)
-    SE_COPD_risk_if_smoke <- sqrt(data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk) / 13567) #13567 is n
+    SE_COPD_risk_if_smoke <- sqrt(data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk) / length(rand_int)) #length(rand_int) is n
     data_pred_fin$COPD_risk_lowerbound_if_smoke <- (data_if_smoke$COPD_risk - 1.96 *  SE_COPD_risk_if_smoke) 
     data_pred_fin$COPD_risk_upperbound_if_smoke <- (data_if_smoke$COPD_risk + 1.96 *  SE_COPD_risk_if_smoke) 
     
     
     data_pred_fin$COPD_risk_if_quit <- (data_if_quit$COPD_risk)
-    SE_COPD_risk_if_quit <- sqrt (data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk) / 13567)
+    SE_COPD_risk_if_quit <- sqrt (data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk) / length(rand_int))
     data_pred_fin$COPD_risk_lowerbound_if_quit <- (data_if_quit$COPD_risk - 1.96 * SE_COPD_risk_if_quit)
     data_pred_fin$COPD_risk_upperbound_if_quit <- (data_if_quit$COPD_risk + 1.96 * SE_COPD_risk_if_quit)
     
