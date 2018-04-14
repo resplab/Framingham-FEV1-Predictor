@@ -344,7 +344,12 @@ make_predictions <- function(respVar, lmfin, predictors) {
   v.yr.rand <- var(rand_yr)
   cov.int.yr.rand <- cov(rand_int, rand_yr)
   
-  #TODO verify variances for random effect confidence intervals
+  # print (v.int.rand) #debug
+  # print (v.yr.rand) #debug
+  # print (vc$vcov) #debug
+  
+  
+  
   cov11.rand <-v.int.rand+2*data_pred2$year*cov.int.yr.rand+data_pred2$year2*v.yr.rand+v.err
   cov12.rand <-v.int.rand+data_pred2$year*cov.int.yr.rand
   cov22.rand <-v.int.rand+v.err
@@ -480,9 +485,9 @@ make_predictions <- function(respVar, lmfin, predictors) {
     
     data_pred_fin <- as.data.frame (data_pred_fin)
     
-    
   }
-      
+  
+  data_pred_fin <- subset(data_pred_fin, year != 0)
   return(data_pred_fin)
 }
 
