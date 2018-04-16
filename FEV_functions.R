@@ -50,7 +50,7 @@ asProbability <- function(p) {
 #function for generating binary code
 BINARY_CODE_FROM_INPUTS <- function(
   fev1_0,
-  fvc,
+  fvc_0,
   age,
   trig,
   hema,
@@ -71,7 +71,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   noc_s#selectInput
 ) {
   if(is.na(fev1_0))   {fev1_0 = 0} else {fev1_0 = 1}
-  if(is.na(fvc))   {fvc = 0} else {fvc = 1}
+  if(is.na(fvc_0))   {fvc_0 = 0} else {fvc_0 = 1}
   if(is.na(age)) {age = 0} else {age = 1}
   # if(is.na(follow_up_baseline)) {follow_up_baseline = 0} else {follow_up_baseline = 1}
   if(is.na(trig))     {trig = 0} else {trig = 1}
@@ -92,7 +92,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   if(dys_exer == '') {dys_exer = 0} else {dys_exer = 1}
   if(noc_s == '') {noc_s = 0} else {noc_s = 1}
   bc <- c(fev1_0,
-          fvc,
+          fvc_0,
           age,
           # follow_up_baseline,
           trig,
@@ -117,7 +117,7 @@ BINARY_CODE_FROM_INPUTS <- function(
 
 FEV_input_labels <- function() {
   c('fev1_0',
-    'fvc',
+    'fvc_0',
     'trig',
     'hema',
     'alb',
@@ -200,7 +200,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
   predictors$RANDOMID<-1
   
   if (respVar == 'fev1_fvc') {
-    predictors$fev1_fvc_0 <- predictors$fev1_0 / predictors$fvc
+    predictors$fev1_fvc_0 <- predictors$fev1_0 / predictors$fvc_0
   }
 
   # Create age category
@@ -240,7 +240,6 @@ make_predictions <- function(respVar, lmfin, predictors) {
   predictors$night_sym_cat[predictors$night_sym=='Maybe'] <- 5
   predictors$night_sym_cat[predictors$night_sym=='No'] <- 3
   predictors$night_sym <- as.factor(predictors$night_sym_cat)
-
 
   # Center input predictors
   predictors$fev1_0[!is.na(predictors$fev1_0)]<-(predictors$fev1_0-2.979447188)/0.794445308 #WC: I centered all continuous predictors except for cum_smoke and year

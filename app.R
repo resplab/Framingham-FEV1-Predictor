@@ -53,7 +53,7 @@ ui <- fluidPage(
        #        "When all fields are completed, a validated model will make predictions.",
         #       "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
       numericInput('fev1_0', labelMandatory('FEV1 (L)'), value = NULL, min = 1, max = 5, step = 0.25),
-      numericInput('fvc', labelMandatory('FVC (L)'), value = NULL, min = 1, max = 10, step = 0.25),
+      numericInput('fvc_0', labelMandatory('FVC (L)'), value = NULL, min = 1, max = 10, step = 0.25),
       numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 100, step = 1),
       selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = NULL),
       numericInput("height", labelMandatory("Height (cm)"),value = NULL, min = 100, max = 250,  step = 0.1),
@@ -111,7 +111,7 @@ ui <- fluidPage(
       ),
       shinyjs::hidden(
         div(id = "FVC_range",
-            HTML(paste(tags$span(style="color:red", "FVC is out of range")))
+            HTML(paste(tags$span(style="color:red", "fvc_0 is out of range")))
         )
       ),
       shinyjs::hidden(
@@ -222,7 +222,7 @@ server <- function(input, output, session) {
   observe({
     alcoholInputTest <- as.numeric(is.na(input$beer) + is.na(input$wine) + is.na(input$cocktail))
 
-    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc) || (input$fvc == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) )) {
+    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc_0) || (input$fvc_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) )) {
       shinyjs::disable("submit")
     }else {
       shinyjs::enable("submit")
@@ -238,8 +238,8 @@ server <- function(input, output, session) {
   })    
   
     observe({
-      if (!is.na(input$fvc) && (input$fvc!="")) {
-        if ((input$fvc < 1)  || (input$fvc > 10))  {
+      if (!is.na(input$fvc_0) && (input$fvc_0!="")) {
+        if ((input$fvc_0 < 1)  || (input$fvc_0 > 8))  {
           shinyjs::show (id = "FVC_range", anim = TRUE)}
         else shinyjs::hide (id = "FVC_range", anim = TRUE)
       }
@@ -297,7 +297,7 @@ server <- function(input, output, session) {
   
   file_name <-  reactive(
     file_name <- BINARY_CODE_FROM_INPUTS(input$fev1_0,
-                                         input$fvc,
+                                         input$fvc_0,
                                          input$age,
                                          input$trig,
                                          input$hema,
@@ -382,7 +382,7 @@ server <- function(input, output, session) {
       #labels - 1st column in the data frame
       FEV_frame_labels <- FEV_input_labels()
       FEV_frame_num_values <- c(input$fev1_0, # we need baseline FEV1 to do future prediction, if not entered, give options: 1.25, 2.25, 3.25, 4.25
-                                input$fvc,
+                                input$fvc_0,
                                 input$trig,  #FEV_frame_num_values used to generate data frame column with numeric values only
                                 input$hema,
                                 input$alb,
@@ -425,7 +425,7 @@ server <- function(input, output, session) {
     predictors_data_frame <- predictors <- isolate(
       data.frame(
         input$fev1_0,
-        input$fvc,
+        input$fvc_0,
         input$age,
         input$trig,
         input$hema,
@@ -448,7 +448,7 @@ server <- function(input, output, session) {
     )
     
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.fev1_0')] <- 'fev1_0'
-    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.fvc')] <- 'fvc'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.fvc_0')] <- 'fvc_0'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.age')] <- 'age'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.trig')] <- 'triglycerides'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.hema')] <- 'hematocrit'
@@ -676,10 +676,10 @@ server <- function(input, output, session) {
       # browser()
       
       #BINARY_CODE_DATAFRAME
-      BINARY_INPUT_NAMES <- c('fev1_0', 'fvc', 'age','trig','hema','alb','glob','alk_phos','WBC','qrs','beer','wine','cocktail','height','smoke_year','daily_cigs','sex','ba_use','dys_exer','noc_s')
+      BINARY_INPUT_NAMES <- c('fev1_0', 'fvc_0', 'age','trig','hema','alb','glob','alk_phos','WBC','qrs','beer','wine','cocktail','height','smoke_year','daily_cigs','sex','ba_use','dys_exer','noc_s')
       BINARY_CODE_DATAFRAME <- data.frame(file_name(), BINARY_INPUT_NAMES)
       #FACTOR_NAMES_DATAFRAME
-      INPUTS <- c('fev1_0', 'fvc', 'age','trig','hema','alb','glob','alk_phos','WBC','qrs',
+      INPUTS <- c('fev1_0', 'fvc_0', 'age','trig','hema','alb','glob','alk_phos','WBC','qrs',
                   'beer', # ?calculated from beer,wine,cocktail consumption?
                   'wine','cocktail','height',
                   'smoke_year','daily_cigs',
@@ -775,7 +775,7 @@ server <- function(input, output, session) {
     
     #disabling inputs
     shinyjs::disable("fev1_0") 
-    shinyjs::disable("fvc") 
+    shinyjs::disable("fvc_0") 
     shinyjs::disable("age") 
     shinyjs::disable("sex")  
     shinyjs::disable("height") 
