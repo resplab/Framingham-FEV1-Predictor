@@ -50,14 +50,14 @@ asProbability <- function(p) {
 #function for generating binary code
 BINARY_CODE_FROM_INPUTS <- function(
   fev1_0,
+  fvc,
   age,
-  # follow_up_baseline,
   trig,
   hema,
   alb,
   glob,
   alk_phos,
-  wbc,
+  WBC,
   qrs,
   beer,
   wine,
@@ -71,6 +71,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   noc_s#selectInput
 ) {
   if(is.na(fev1_0))   {fev1_0 = 0} else {fev1_0 = 1}
+  if(is.na(fvc))   {fvc = 0} else {fvc = 1}
   if(is.na(age)) {age = 0} else {age = 1}
   # if(is.na(follow_up_baseline)) {follow_up_baseline = 0} else {follow_up_baseline = 1}
   if(is.na(trig))     {trig = 0} else {trig = 1}
@@ -78,7 +79,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   if(is.na(alb))      {alb = 0} else {alb = 1}
   if(is.na(glob))     {glob = 0} else {glob = 1}
   if(is.na(alk_phos)) {alk_phos = 0} else {alk_phos = 1}
-  if(is.na(wbc)) {wbc = 0} else {wbc = 1}
+  if(is.na(WBC)) {WBC = 0} else {WBC = 1}
   if(is.na(qrs))      {qrs = 0} else {qrs = 1}
   if(is.na(beer))     {beer = 0} else {beer = 1}
   if(is.na(wine))     {wine = 0} else {wine = 1}
@@ -91,6 +92,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   if(dys_exer == '') {dys_exer = 0} else {dys_exer = 1}
   if(noc_s == '') {noc_s = 0} else {noc_s = 1}
   bc <- c(fev1_0,
+          fvc,
           age,
           # follow_up_baseline,
           trig,
@@ -98,7 +100,7 @@ BINARY_CODE_FROM_INPUTS <- function(
           alb,
           glob,
           alk_phos,
-          wbc,
+          WBC,
           qrs,
           beer,
           wine,
@@ -115,12 +117,13 @@ BINARY_CODE_FROM_INPUTS <- function(
 
 FEV_input_labels <- function() {
   c('fev1_0',
+    'fvc',
     'trig',
     'hema',
     'alb',
     'glob',
     'alk_phos',
-    'wbc',
+    'WBC',
     'qrs',
     'beer',
     'wine',
@@ -151,7 +154,7 @@ buildformula_factors <- function(BINARY_CODE_DATAFRAME,FACTOR_NAMES_DATAFRAME){
 }
 
 
-FEV_calculate_lmer_fn<- function(responseVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,updateProgress = NULL){
+FEV_calculate_lmer_fn<- function(respVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,updateProgress = NULL){
   #####################################
   #STEP0: Prepare the data(Chen's code)
   #####################################
@@ -184,7 +187,7 @@ FEV_calculate_lmer_fn<- function(responseVar, BINARY_CODE_DATAFRAME,FACTORS_NAME
   formula_factors <- buildformula_factors(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
   #STEP4: use reformulate to build the full equation(can combine steps 3 and 4)
   # formula_factors <- c(formula_factors, "year", "year2", "(year|RANDOMID)") #NOTE: "year", "year2", "(year|RANDOMID)" are now all mapped to fev1_0 input
-  full_formula <- reformulate(formula_factors,response=responseVar)
+  full_formula <- reformulate(formula_factors,response=respVar)
   #STEP5: Use lmfin to compute the coefficients
   lmfin <- lmer(full_formula,data_rf4,weights=sw, REML=FALSE)
   return(lmfin)
@@ -197,7 +200,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
   predictors$RANDOMID<-1
   
   if (respVar == 'fev1_fvc') {
-    predictors$fev1_fvc_0 <- 1.0
+    predictors$fev1_fvc_0 <- predictors$fev1_0 / predictors$fvc
   }
 
   # Create age category
@@ -487,7 +490,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
     
   }
   
-  data_pred_fin <- subset(data_pred_fin, year != 0)
+  data_pred_fin <- subset(data_pred_fin, year != 0) #starting prediction on year 1
   return(data_pred_fin)
 }
 
@@ -502,7 +505,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
 # Need to first transform you input                       #
 ###########################################################
 
-FEV_calculate_coefficients<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME){
+FEV_calculate_coefficients<- function(respVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME){
   #####################################
   #STEP0: Prepare the data(Chen's code)
   #####################################
@@ -534,10 +537,10 @@ FEV_calculate_coefficients<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFR
   #STEP2: Create inside this func. or outside this function, the FACTOR_NAMES_DATAFRAME - NO, just pass FACTOR_NAMES_DATAFRAME to the function
   
   #STEP3: Use buildformula_factors(BINARY_CODE_DATAFRAME,FACTOR_NAMES_DATAFRAME) to build the equation
-  formula_factors <- buildformula_factors(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
+  formula_factors <- buildformula_factors(respVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
   
   #STEP4: use reformulate to build the full equation(can combine steps 3 and 4)
-  full_formula <- reformulate(formula_factors,response="fev1")
+  full_formula <- reformulate(formula_factors,response=respVar)
   #STEP5: Use lmfin to compute the coefficients
   lmfin <- lmer(full_formula,data_rf4,weights=sw, REML=FALSE)
   #STEP6: Use extract_lmer_coefficients(lmfin) to extract coefficients

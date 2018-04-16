@@ -52,7 +52,8 @@ ui <- fluidPage(
       #helpText("Enter as many patient characteristics as possible.",
        #        "When all fields are completed, a validated model will make predictions.",
         #       "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
-      numericInput('fev1_0', labelMandatory('FEV1 at baseline (L)'), value = NULL, min = 1, max = 5, step = 0.25),
+      numericInput('fev1_0', labelMandatory('FEV1 (L)'), value = NULL, min = 1, max = 5, step = 0.25),
+      numericInput('fvc', labelMandatory('FVC (L)'), value = NULL, min = 1, max = 10, step = 0.25),
       numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 100, step = 1),
       selectInput("sex", labelMandatory("Gender"),list('','female', 'male'),selected = NULL),
       numericInput("height", labelMandatory("Height (cm)"),value = NULL, min = 100, max = 250,  step = 0.1),
@@ -83,7 +84,7 @@ ui <- fluidPage(
       shinyjs::hidden(
         div(id = "BloodTest",
             numericInput("hema","Hematocrit (%)",value = NULL, min = 25, max = 62, step = 1),
-            numericInput("wbc","White blood cells (10^9/L)", value = NULL, min = 25, max = 172, step = 1),
+            numericInput("WBC","White blood cells (10^9/L)", value = NULL, min = 25, max = 172, step = 1),
             numericInput("trig","Triglycerides (mg/dl)",value = NULL, min = 1, max = 2000, step = 1),
             numericInput("alb","Albumin (g/L)",value = NULL, min = 10, max = 100, step = 1),
             numericInput("glob","Globulin (g/L)",value = NULL, min = 1, max = 100, step = 1),
@@ -106,6 +107,11 @@ ui <- fluidPage(
       shinyjs::hidden(
         div(id = "FEV1_range",
             HTML(paste(tags$span(style="color:red", "FEV1 must be between 1L and 5L")))
+        )
+      ),
+      shinyjs::hidden(
+        div(id = "FVC_range",
+            HTML(paste(tags$span(style="color:red", "FVC is out of range")))
         )
       ),
       shinyjs::hidden(
@@ -216,7 +222,7 @@ server <- function(input, output, session) {
   observe({
     alcoholInputTest <- as.numeric(is.na(input$beer) + is.na(input$wine) + is.na(input$cocktail))
 
-    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) )) {
+    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc) || (input$fvc == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) )) {
       shinyjs::disable("submit")
     }else {
       shinyjs::enable("submit")
@@ -231,6 +237,13 @@ server <- function(input, output, session) {
     }
   })    
   
+    observe({
+      if (!is.na(input$fvc) && (input$fvc!="")) {
+        if ((input$fvc < 1)  || (input$fvc > 10))  {
+          shinyjs::show (id = "FVC_range", anim = TRUE)}
+        else shinyjs::hide (id = "FVC_range", anim = TRUE)
+      }
+    })
   observe({
     if (!is.na(input$age) && (input$age!="")) {
       if ((input$age < 20)  || (input$age > 100))  {
@@ -284,13 +297,14 @@ server <- function(input, output, session) {
   
   file_name <-  reactive(
     file_name <- BINARY_CODE_FROM_INPUTS(input$fev1_0,
+                                         input$fvc,
                                          input$age,
                                          input$trig,
                                          input$hema,
                                          input$alb,
                                          input$glob,
                                          input$alk_phos,
-                                         input$wbc,
+                                         input$WBC,
                                          input$qrs,
                                          input$beer, #again, alcohol index is a derived variable (see prediction)
                                          input$wine,
@@ -303,7 +317,6 @@ server <- function(input, output, session) {
                                          input$dys_exer,
                                          input$noc_s)
   )
-  
   output$binary <- renderText({ 
     file_name() 
     # input$ba_use #for debug
@@ -369,12 +382,13 @@ server <- function(input, output, session) {
       #labels - 1st column in the data frame
       FEV_frame_labels <- FEV_input_labels()
       FEV_frame_num_values <- c(input$fev1_0, # we need baseline FEV1 to do future prediction, if not entered, give options: 1.25, 2.25, 3.25, 4.25
+                                input$fvc,
                                 input$trig,  #FEV_frame_num_values used to generate data frame column with numeric values only
                                 input$hema,
                                 input$alb,
                                 input$glob,
                                 input$alk_phos,
-                                input$wbc,
+                                input$WBC,
                                 input$qrs,
                                 input$beer, #alcohol is a derived variable from beer, wine and highballs
                                 input$wine,
@@ -391,7 +405,7 @@ server <- function(input, output, session) {
       
       FEV_frame_char_values <- c("NULL","NULL","NULL","NULL","NULL",
                                  "NULL","NULL","NULL","NULL","NULL",
-                                 "NULL","NULL","NULL","NULL","NULL",
+                                 "NULL","NULL","NULL","NULL","NULL", "NULL",
                                  input$ba_use,
                                  input$dys_exer,
                                  input$noc_s,
@@ -411,13 +425,14 @@ server <- function(input, output, session) {
     predictors_data_frame <- predictors <- isolate(
       data.frame(
         input$fev1_0,
+        input$fvc,
         input$age,
         input$trig,
         input$hema,
         input$alb,
         input$glob,
         input$alk_phos,
-        input$wbc,
+        input$WBC,
         input$qrs,
         input$beer,
         input$wine,
@@ -433,13 +448,14 @@ server <- function(input, output, session) {
     )
     
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.fev1_0')] <- 'fev1_0'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.fvc')] <- 'fvc'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.age')] <- 'age'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.trig')] <- 'triglycerides'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.hema')] <- 'hematocrit'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.alb')] <- 'albumin'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.glob')] <- 'globulin'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.alk_phos')] <- 'ALP'
-    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.wbc')] <- 'WBC'
+    colnames(predictors)[which(colnames(predictors_data_frame) == 'input.WBC')] <- 'WBC'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.qrs')] <- 'QRS_intv'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.beer')] <- 'beer'
     colnames(predictors)[which(colnames(predictors_data_frame) == 'input.wine')] <- 'wine'
@@ -660,29 +676,29 @@ server <- function(input, output, session) {
       # browser()
       
       #BINARY_CODE_DATAFRAME
-      BINARY_INPUT_NAMES <- c('fev1_0','age','trig','hema','alb','glob','alk_phos','wbc','qrs','beer','wine','cocktail','height','smoke_year','daily_cigs','sex','ba_use','dys_exer','noc_s')
+      BINARY_INPUT_NAMES <- c('fev1_0', 'fvc', 'age','trig','hema','alb','glob','alk_phos','WBC','qrs','beer','wine','cocktail','height','smoke_year','daily_cigs','sex','ba_use','dys_exer','noc_s')
       BINARY_CODE_DATAFRAME <- data.frame(file_name(), BINARY_INPUT_NAMES)
       #FACTOR_NAMES_DATAFRAME
-      INPUTS <- c('fev1_0','age','trig','hema','alb','glob','alk_phos','wbc','qrs',
+      INPUTS <- c('fev1_0', 'fvc', 'age','trig','hema','alb','glob','alk_phos','WBC','qrs',
                   'beer', # ?calculated from beer,wine,cocktail consumption?
                   'wine','cocktail','height',
                   'smoke_year','daily_cigs',
                   'sex','ba_use','dys_exer','noc_s')
-      EQUATION_FACTORS1 <- c('year',#factors for fev1_0 unknown - ask Chen
+      EQUATION_FACTORS1 <- c('year', NA,
                              'age','triglycerides','hematocrit','albumin','globulin','ALP','WBC','QRS_intv',
                              'alcohol_indx','wine','cocktail',
                              'height2',
-                             'cpackyr','cpackyr',
+                             'cpackyr', NA,
                              'sex','broncho','dyspnea_exc','night_sym')
-      EQUATION_FACTORS2 <- c('year2',#factors for fev1_0 unknown - ask Chen
+      EQUATION_FACTORS2 <- c('year2', NA, 
                              'agecat','triglycerides:year','hematocrit:year','albumin:year','globulin:year','ALP:year','WBC:year','QRS_intv:year',
                              'alcohol_indx:year','wine:year','cocktail:year',
-                             'height2:sex',
-                             NA,NA, #factors for 'smoke_year','daily_cigs'
+                             'height2:sex', NA, NA,
                              'sex:year','broncho:year','dyspnea_exc:year','night_sym:year')
       EQUATION_FACTORS3 <- c('(year|RANDOMID)',#factors for fev1_0 unknown - ask Chen
-                             NA,'triglycerides:cpackyr',NA,'albumin:sex',NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA)
+                             NA,'triglycerides:cpackyr',NA,'albumin:sex',NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA, NA)
       FACTORS_NAMES_DATAFRAME <- data.frame(INPUTS, EQUATION_FACTORS1, EQUATION_FACTORS2, EQUATION_FACTORS3)
+      print (FACTORS_NAMES_DATAFRAME)
       progress$set(message = "Fitting new reduced model. This might take a few minutes", value = 0.30)
       
       #save data frames for unit tests - commented out under normal operation
@@ -759,6 +775,7 @@ server <- function(input, output, session) {
     
     #disabling inputs
     shinyjs::disable("fev1_0") 
+    shinyjs::disable("fvc") 
     shinyjs::disable("age") 
     shinyjs::disable("sex")  
     shinyjs::disable("height") 
@@ -773,7 +790,7 @@ server <- function(input, output, session) {
     shinyjs::disable("noc_s") 
     shinyjs::disable("hema") 
     shinyjs::disable("trig") 
-    shinyjs::disable("wbc") 
+    shinyjs::disable("WBC") 
     shinyjs::disable("alb") 
     shinyjs::disable("glob") 
     shinyjs::disable("alk_phos") 
