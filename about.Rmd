@@ -26,5 +26,5 @@ Please report bugs and issues [here] (https://github.com/aminadibi/Framingham-FE
                          
 #### Credits
 
-Individualized Framingham Lung Function Decline Predictor is created by [Amin Adibi](http://resp.core.ubc.ca/team/Amin_Adibi), Wenjia Chen, [Abdollah Safari](http://resp.core.ubc.ca/team/Abdollah_Safari), Jane Krot, Ainsleigh Hill, and [Mohsen Sadatsafavi](http://resp.core.ubc.ca/team/Mohsen_Sadatsafavi) at the University of British Columbia. 
+Individualized Framingham Lung Function Decline Predictor is created by [Amin Adibi](http://resp.core.ubc.ca/team/Amin_Adibi), Wenjia Chen, [Abdollah Safari](http://resp.core.ubc.ca/team/Abdollah_Safari), Jane Krot, [Mark FitzGerald](https://www.vchri.ca/researchers/mark-fitzgerald), [Don Sin](https://www.hli.ubc.ca/profile/sin/don), and [Mohsen Sadatsafavi](http://resp.core.ubc.ca/team/Mohsen_Sadatsafavi) at the University of British Columbia. 
 
