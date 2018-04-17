@@ -4,7 +4,7 @@ Enter patient data in the left panel and press "Run the prediction model."
 
 For best accuracy, enter all inputs. When all inputs are present, the full validated model in the publication is used. 
 
-When fewer inputs are available, the appropriate reduced model is used for prediciton. Please refer to the paper for methodological details.
+When fewer inputs are available, the appropriate reduced model is used for prediciton. Note that prediction models are based on the Framingham Offspring Cohort, which is predmoninatly white. Predictions for other ethnic/racial groups may be biased. Please refer to the paper for methodological details.
 
 Inputs marked with <span style="color:red">&#42;</span> are required. 
 
