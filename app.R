@@ -134,6 +134,12 @@ ui <- fluidPage(
             HTML(paste(tags$span(style="color:red", "Please enter either all or none of alcohol intake variables")))
         )
       ),
+      
+      shinyjs::hidden(
+        div(id = "trigpkyr",
+            HTML(paste(tags$span(style="color:red", "Please enter frequency and history of smoking")))
+        )
+      ),
       actionButton("submit", "Run the prediction model"),
       actionButton("reset_button", "Start over")
     ),
@@ -221,8 +227,9 @@ server <- function(input, output, session) {
   
   observe({
     alcoholInputTest <- as.numeric(is.na(input$beer) + is.na(input$wine) + is.na(input$cocktail))
-
-    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc_0) || (input$fvc_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) )) {
+    pkyr <- as.numeric(is.na(input$daily_cigs) + is.na(input$smoke_year))
+    
+    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc_0) || (input$fvc_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) || (input$trig>0 && pkyr == 2)  )) {
       shinyjs::disable("submit")
     }else {
       shinyjs::enable("submit")
@@ -278,6 +285,19 @@ server <- function(input, output, session) {
         shinyjs::hide (id = "alcoholIntake", anim = TRUE)
       }
         
+  })  
+  
+  observe({
+    pkyr <- input$daily_cigs + input$smoke_year
+    if (!is.na(input$trig) && is.na(pkyr)) {
+      shinyjs::show (id = "trigpkyr", anim = TRUE)
+
+    }
+    else {
+      shinyjs::hide (id = "trigpkyr", anim = TRUE)
+
+    }
+    
   })  
   
   # Output Functions-----------------------------------------------------------------------------------------------------------
