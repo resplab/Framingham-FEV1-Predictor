@@ -28,16 +28,9 @@ jsResetCode <- "shinyjs.reset = function() {history.go(0)}" # Define the js meth
 
 source('./FEV_functions.R')
 
-GLOBAL_fev1_lmer_model <- NULL
-GLOBAL_fev1_fvc_lmer_model <- NULL
-GLOBAL_fev1_lmer_model_summary <- NULL
-GLOBAL_fev1_lmer_model_loaded_FLAG <- NULL
-GLOBAL_prediction_results_fev1<- NULL
-GLOBAL_prediction_results_fev1_fvc <-  NULL
 
 button_width <- 160
 
-# fev1_lmer_function_output_summary <- NULL
 ui <- fluidPage(
   shinyjs::useShinyjs(),
   shinyjs::extendShinyjs(text = jsResetCode, functions = c("reset")),                      # Add the js code to the page
@@ -49,9 +42,6 @@ ui <- fluidPage(
   sidebarLayout(
     
     sidebarPanel(
-      #helpText("Enter as many patient characteristics as possible.",
-       #        "When all fields are completed, a validated model will make predictions.",
-        #       "Fewer inputs will trigger the appropriate reduced model. See 'about' for more details."), 
       numericInput('fev1_0', labelMandatory('FEV1 (L)'), value = NULL, min = 1, max = 5, step = 0.25),
       numericInput('fvc_0', labelMandatory('FVC (L)'), value = NULL, min = 1, max = 10, step = 0.25),
       numericInput("age", labelMandatory("Age (year)"), value = NULL, min = 20, max = 100, step = 1),
@@ -191,6 +181,13 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
+  GLOBAL_fev1_lmer_model <- NULL
+  GLOBAL_fev1_fvc_lmer_model <- NULL
+  GLOBAL_fev1_lmer_model_summary <- NULL
+  GLOBAL_fev1_lmer_model_loaded_FLAG <- NULL
+  GLOBAL_prediction_results_fev1<- NULL
+  GLOBAL_prediction_results_fev1_fvc <-  NULL
+  # fev1_lmer_function_output_summary <- NULL
   
   # Output Function Constants-------------------------------------------------------------------------------------------------
   
@@ -227,9 +224,12 @@ server <- function(input, output, session) {
   
   observe({
     alcoholInputTest <- as.numeric(is.na(input$beer) + is.na(input$wine) + is.na(input$cocktail))
-    pkyr <- as.numeric(is.na(input$daily_cigs) + is.na(input$smoke_year))
-    
-    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc_0) || (input$fvc_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) || (input$trig>0 && pkyr == 2)  )) {
+    pkyrTest <- as.numeric(is.na(input$daily_cigs) + is.na(input$smoke_year))
+    if (is.na(input$trig)  || (input$trig == "") ) { 
+      trigTest <- 0 } else {
+        trigTest <- input$trig
+      }
+    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc_0) || (input$fvc_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) || (trigTest>0 && pkyrTest == 2)  )) {
       shinyjs::disable("submit")
     }else {
       shinyjs::enable("submit")
