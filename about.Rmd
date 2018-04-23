@@ -6,11 +6,18 @@ output: html_document
 
 #### About 
 
+
 This web application uses a linear mixed effects predictive model based on the Framingham Offspring Study to predict lung function decline over time in healthy adult population. Predictions are based on twenty common predictors selected through machine learning selection, and random effects to model unexplained heterogeneity among individuals. 
 
 The full model which includes all the predictors is externally validated it in two large, multi-center cohorts. The web app is adaptive to the user input; when all inputs are not available, the app fits a reduced model to the data and uses that for prediction. It must be emphasized that reduced models are, by definition, less accurate than the full model. 
 
 Please refer to the manuscript for more details on the structure of the model and the validation process.
+
+#### Citation
+
+Please cite this paper when using the results of this web application:
+
+```Chen, Wenjia et al. Individualized prediction of lung function decline and risk of COPD in the general adult population. To be submitted to JAMA.```
 
 #### Bug Report
 
@@ -19,8 +26,5 @@ Please report bugs and issues [here] (https://github.com/aminadibi/Framingham-FE
                          
 #### Credits
 
-Individualized Framingham Lung Function Decline Predictor is created by [Amin Adibi](http://resp.core.ubc.ca/team/Amin_Adibi), Wenjia Chen, Jane Krot, Ainsleigh Hill, and [Mohsen Sadatsafavi](http://resp.core.ubc.ca/team/Mohsen_Sadatsafavi) at the University of British Columbia. 
+Individualized Framingham Lung Function Decline Predictor is created by [Amin Adibi](http://resp.core.ubc.ca/team/Amin_Adibi), Wenjia Chen, [Abdollah Safari](http://resp.core.ubc.ca/team/Abdollah_Safari), Jane Krot, [Mark FitzGerald](https://www.vchri.ca/researchers/mark-fitzgerald), [Don Sin](https://www.hli.ubc.ca/profile/sin/don), and [Mohsen Sadatsafavi](http://resp.core.ubc.ca/team/Mohsen_Sadatsafavi) at the University of British Columbia. 
 
-Please cite this paper when using the results of this web application:
-
-Chen, Wenjia et al. Individualized prediction of lung function decline and risk of COPD in the general adult population. To be submitted to JAMA.

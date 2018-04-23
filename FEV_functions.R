@@ -38,17 +38,26 @@
 # #FEV_calculate_lmer_fn - creates linear mixed-effects model based on user inputs
 # make_predictions - creates predictions and CI which are then used by plotly 
 
+#function for forcing probabilities between zero and one 
+asProbability <- function(p) {
+  if (p > 1) {result = 1}
+  else if (p < 0) {result = 0}
+  else {result = p}
+  
+  return (result)
+}
+
 #function for generating binary code
 BINARY_CODE_FROM_INPUTS <- function(
   fev1_0,
+  fvc_0,
   age,
-  # follow_up_baseline,
   trig,
   hema,
   alb,
   glob,
   alk_phos,
-  white_bc,
+  WBC,
   qrs,
   beer,
   wine,
@@ -62,6 +71,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   noc_s#selectInput
 ) {
   if(is.na(fev1_0))   {fev1_0 = 0} else {fev1_0 = 1}
+  if(is.na(fvc_0))   {fvc_0 = 0} else {fvc_0 = 1}
   if(is.na(age)) {age = 0} else {age = 1}
   # if(is.na(follow_up_baseline)) {follow_up_baseline = 0} else {follow_up_baseline = 1}
   if(is.na(trig))     {trig = 0} else {trig = 1}
@@ -69,7 +79,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   if(is.na(alb))      {alb = 0} else {alb = 1}
   if(is.na(glob))     {glob = 0} else {glob = 1}
   if(is.na(alk_phos)) {alk_phos = 0} else {alk_phos = 1}
-  if(is.na(white_bc)) {white_bc = 0} else {white_bc = 1}
+  if(is.na(WBC)) {WBC = 0} else {WBC = 1}
   if(is.na(qrs))      {qrs = 0} else {qrs = 1}
   if(is.na(beer))     {beer = 0} else {beer = 1}
   if(is.na(wine))     {wine = 0} else {wine = 1}
@@ -82,6 +92,7 @@ BINARY_CODE_FROM_INPUTS <- function(
   if(dys_exer == '') {dys_exer = 0} else {dys_exer = 1}
   if(noc_s == '') {noc_s = 0} else {noc_s = 1}
   bc <- c(fev1_0,
+          fvc_0,
           age,
           # follow_up_baseline,
           trig,
@@ -89,7 +100,7 @@ BINARY_CODE_FROM_INPUTS <- function(
           alb,
           glob,
           alk_phos,
-          white_bc,
+          WBC,
           qrs,
           beer,
           wine,
@@ -106,12 +117,13 @@ BINARY_CODE_FROM_INPUTS <- function(
 
 FEV_input_labels <- function() {
   c('fev1_0',
+    'fvc_0',
     'trig',
     'hema',
     'alb',
     'glob',
     'alk_phos',
-    'white_bc',
+    'WBC',
     'qrs',
     'beer',
     'wine',
@@ -142,7 +154,7 @@ buildformula_factors <- function(BINARY_CODE_DATAFRAME,FACTOR_NAMES_DATAFRAME){
 }
 
 
-FEV_calculate_lmer_fn<- function(responseVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,updateProgress = NULL){
+FEV_calculate_lmer_fn<- function(respVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME,updateProgress = NULL){
   #####################################
   #STEP0: Prepare the data(Chen's code)
   #####################################
@@ -175,7 +187,7 @@ FEV_calculate_lmer_fn<- function(responseVar, BINARY_CODE_DATAFRAME,FACTORS_NAME
   formula_factors <- buildformula_factors(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
   #STEP4: use reformulate to build the full equation(can combine steps 3 and 4)
   # formula_factors <- c(formula_factors, "year", "year2", "(year|RANDOMID)") #NOTE: "year", "year2", "(year|RANDOMID)" are now all mapped to fev1_0 input
-  full_formula <- reformulate(formula_factors,response=responseVar)
+  full_formula <- reformulate(formula_factors,response=respVar)
   #STEP5: Use lmfin to compute the coefficients
   lmfin <- lmer(full_formula,data_rf4,weights=sw, REML=FALSE)
   return(lmfin)
@@ -188,7 +200,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
   predictors$RANDOMID<-1
   
   if (respVar == 'fev1_fvc') {
-    predictors$fev1_fvc_0 <- 1.0
+    predictors$fev1_fvc_0 <- predictors$fev1_0 / predictors$fvc_0
   }
 
   # Create age category
@@ -228,7 +240,6 @@ make_predictions <- function(respVar, lmfin, predictors) {
   predictors$night_sym_cat[predictors$night_sym=='Maybe'] <- 5
   predictors$night_sym_cat[predictors$night_sym=='No'] <- 3
   predictors$night_sym <- as.factor(predictors$night_sym_cat)
-
 
   # Center input predictors
   predictors$fev1_0[!is.na(predictors$fev1_0)]<-(predictors$fev1_0-2.979447188)/0.794445308 #WC: I centered all continuous predictors except for cum_smoke and year
@@ -292,7 +303,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
   #vARIANCE-COVARIANCE coefficients
   vc<-as.data.frame(VarCorr(lmfin)) #JK: functions to check if an object is a data frame, or coerce it if possible;
   #JK: VarCorr() calculates the estimated variances, SD and correlations between the random-effects terms in a mixed-effects model.
-  vc #JK: vc produces a table with 4 rows; in the next four rows of code, extract elements in the 4th column and assign them to variables - v.int, v.yr, cov.int.yr, v.err
+  #JK: vc produces a table with 4 rows; in the next four rows of code, extract elements in the 4th column and assign them to variables - v.int, v.yr, cov.int.yr, v.err
   v.int<-vc$vcov[1]
   v.yr<-vc$vcov[2]
   cov.int.yr<-vc$vcov[3]
@@ -320,38 +331,65 @@ make_predictions <- function(respVar, lmfin, predictors) {
     data_pred2<-join(data_pred2,pfev_fvc0,by='RANDOMID', type='right',match='all')
   }
 
-  #Calculation the bivariate correlation between baseline and future FEV1 value
+  #Calculation the bivariate correlation between baseline and future FEV1 value, used for predition interval
   cov11<-v.int+2*data_pred2$year*cov.int.yr+data_pred2$year2*v.yr+v.err
   cov12<-v.int+data_pred2$year*cov.int.yr
   cov22<-v.int+v.err
 
-  data_pred2<-cbind(data_pred2,cov11,cov12)
-  # data_pred2<-merge(data_pred2,cov22,all=TRUE) #please make sure cov22's variable name is accurate in the prediction dataset
-  data_pred2<-cbind(data_pred2,cov22) #JK - we should be able to use a cbind instead of a merge, with merge, cov22 is renamed as 'y'
-
+  #Calculation the bivariate correlation between baseline and future FEV1 value, used for confidence interval
+  rand_eff <- ranef(lmfin)
+  rand_eff <- as.data.frame(rand_eff)
+  rand_int <- subset(rand_eff, term == "(Intercept)")[,4]
+  rand_yr  <- subset(rand_eff, term == "year")[,4]
+  
+  v.int.rand <- var(rand_int) 
+  v.yr.rand <- var(rand_yr)
+  cov.int.yr.rand <- cov(rand_int, rand_yr)
+  
+  # print (v.int.rand) #debug
+  # print (v.yr.rand) #debug
+  # print (vc$vcov) #debug
+  
+  
+  
+  cov11.rand <-v.int.rand+2*data_pred2$year*cov.int.yr.rand+data_pred2$year2*v.yr.rand+v.err
+  cov12.rand <-v.int.rand+data_pred2$year*cov.int.yr.rand
+  cov22.rand <-v.int.rand+v.err
+  
+  data_pred2<-cbind(data_pred2, cov11, cov12, cov22, cov11.rand, cov12.rand, cov22.rand )
+  
   #relate baseline fev1 to future fev1 to make final prediction
   if (respVar == 'fev1') { 
     pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_0-data_pred2$pfev0)/data_pred2$cov22
+    
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
-  
+    se2.rand <- sqrt(data_pred2$cov11.rand-data_pred2$cov12.rand*data_pred2$cov12.rand/data_pred2$cov22.rand)
+    
     #VERY IMPORTANT!!!!  - back-transform PREDICTION into original scale
     #pred3<-pred2*y.sd+y.mean
     pred3<-pred2*0.794445308+2.979447188
     #se3<-se2*y.sd
     se3<-se2*0.794445308
+    se3.rand <- se2.rand*0.794445308
+    
     
     lower3<-pred3-1.960463534*se3 #lower 95% prediction interval
     upper3<-pred3+1.960463534*se3 #upper 95% prediction interval
   
+    lower3.rand<-pred3-1.960463534*se3.rand #lower 95% confidence interval
+    upper3.rand<-pred3+1.960463534*se3.rand #upper 95% confidence interval
   
-    data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr,data_pred2$fev1_0,pred3,se3,lower3,upper3)
+    data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr,data_pred2$fev1_0,pred3,se3, lower3, upper3, se3.rand, lower3.rand, upper3.rand)
     data_pred_fin <- as.data.frame(data_pred_fin)
-    colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_0","predicted_FEV1","predicted_SE","lowerbound", "upperbound")
+    colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_0","predicted_FEV1","predicted_SE_PI", "lowerbound_PI", "upperbound_PI", "predicted_SE_CI", "lowerbound_CI", "upperbound_CI")
     # Note: We used baseline FEV1 to predict future FEV1, so baseline FEV1 should be set to original value, se should be 0
     data_pred_fin$predicted_FEV1[data_pred_fin$year==0]<-data_pred_fin$fev1_0[data_pred_fin$year==0]*0.794445308+2.979447188 #backtransformed
-    data_pred_fin$predicted_SE[data_pred_fin$year==0]<-0
-    data_pred_fin$lowerbound[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
-    data_pred_fin$upperbound[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
+    data_pred_fin$predicted_SE_PI[data_pred_fin$year==0]<-0
+    data_pred_fin$predicted_SE_CI[data_pred_fin$year==0]<-0
+    data_pred_fin$lowerbound_PI[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
+    data_pred_fin$upperbound_PI[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
+    data_pred_fin$lowerbound_CI[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
+    data_pred_fin$upperbound_CI[data_pred_fin$year==0]<-data_pred_fin$predicted_FEV1[data_pred_fin$year==0]
     
     #removin untransfromed FEV10 from the dataframme
     data_pred_fin = subset(data_pred_fin, select = -c(fev1_0) )
@@ -359,15 +397,19 @@ make_predictions <- function(respVar, lmfin, predictors) {
     #calculating %predicted FEV1, sex == 1 male. sex == 1 female. Following the NHANES-III algorithm, using 25y/o white Caucasian as reference,for people aged 20 years and above
     if   (predictors$sex == 1) { 
     data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_upperbound <- 100 * data_pred_fin$upperbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_lowerbound <- 100 * data_pred_fin$lowerbound / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_upperbound_PI <- 100 * data_pred_fin$upperbound_PI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_lowerbound_PI <- 100 * data_pred_fin$lowerbound_PI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_upperbound_CI <- 100 * data_pred_fin$upperbound_CI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+    data_pred_fin$percentpred_lowerbound_CI <- 100 * data_pred_fin$lowerbound_CI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
     
     }
     
     if   (predictors$sex == 2) { 
       data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-      data_pred_fin$percentpred_upperbound <- 100 * data_pred_fin$upperbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
-      data_pred_fin$percentpred_lowerbound <- 100 * data_pred_fin$lowerbound / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+      data_pred_fin$percentpred_upperbound_PI <- 100 * data_pred_fin$upperbound_PI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+      data_pred_fin$percentpred_lowerbound_PI <- 100 * data_pred_fin$lowerbound_PI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+      data_pred_fin$percentpred_upperbound_CI <- 100 * data_pred_fin$upperbound_CI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
+      data_pred_fin$percentpred_lowerbound_CI <- 100 * data_pred_fin$lowerbound_CI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
       
       }
 
@@ -375,17 +417,17 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_if_smoke <- subset(data_pred_fin, smoking == 1)
       data_if_quit <- subset(data_pred_fin, smoking == 0)
       data_pred_fin <- subset(data_pred_fin, smoking == 0)
-      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr, predicted_FEV1, upperbound, lowerbound, percentpred, percentpred_upperbound, percentpred_lowerbound))
+      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr,  upperbound_CI, lowerbound_CI, percentpred_upperbound_CI, percentpred_lowerbound_CI))
       
       #adding coloumns for smoking vs. quitting scenario
       data_pred_fin$predicted_FEV1_if_smoke <- data_if_smoke$predicted_FEV1
-      data_pred_fin$FEV1_lowerbound_if_smoke <- data_if_smoke$lowerbound
-      data_pred_fin$upperbound_if_smoke <- data_if_smoke$upperbound
+      data_pred_fin$FEV1_lowerbound_CI_if_smoke <- data_if_smoke$lowerbound_CI
+      data_pred_fin$upperbound_CI_if_smoke <- data_if_smoke$upperbound_CI
       
       
       data_pred_fin$predicted_FEV1_if_quit <- data_if_quit$predicted_FEV1
-      data_pred_fin$FEV1_lowerbound_if_quit <- data_if_quit$lowerbound
-      data_pred_fin$upperbound_if_quit <- data_if_quit$upperbound
+      data_pred_fin$FEV1_lowerbound_CI_if_quit <- data_if_quit$lowerbound_CI
+      data_pred_fin$upperbound_CI_if_quit <- data_if_quit$upperbound_CI
       
       data_pred_fin$cpackyr_if_smoke <- data_if_smoke$cpackyr
       data_pred_fin$cpackyr_if_quit <- data_if_quit$cpackyr
@@ -394,54 +436,60 @@ make_predictions <- function(respVar, lmfin, predictors) {
       
       #same for percentpred
       data_pred_fin$percentpred_if_smoke <- data_if_smoke$percentpred
-      data_pred_fin$percentpred_FEV1_lowerbound_if_smoke <- data_if_smoke$percentpred_lowerbound
-      data_pred_fin$percentpred_upperbound_if_smoke <- data_if_smoke$percentpred_upperbound
+      data_pred_fin$percentpred_FEV1_lowerbound_CI_if_smoke <- data_if_smoke$percentpred_lowerbound_CI
+      data_pred_fin$percentpred_upperbound_CI_if_smoke <- data_if_smoke$percentpred_upperbound_CI
       
       
       data_pred_fin$percentpred_if_quit <- data_if_quit$percentpred
-      data_pred_fin$percentpred_FEV1_lowerbound_if_quit <- data_if_quit$percentpred_lowerbound
-      data_pred_fin$percentpred_upperbound_if_quit <- data_if_quit$percentpred_upperbound
+      data_pred_fin$percentpred_FEV1_lowerbound_CI_if_quit <- data_if_quit$percentpred_lowerbound_CI
+      data_pred_fin$percentpred_upperbound_CI_if_quit <- data_if_quit$percentpred_upperbound_CI
       
   } else if (respVar == 'fev1_fvc') {
-    #print(data_pred2$fev1_fvc_0)  #debug amin
     pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_fvc_0-data_pred2$pfev_fvc0)/data_pred2$cov22
-    #print(pred2)  #debug amin
-  
+
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
     
-    prob<-pnorm(((0.7-0.7904786)/0.09908784-pred2)/se2)
+    z_score <- (0.7 - pred2*0.09908784 - 0.7904786) / (se2*0.09908784)
+    prob <- pnorm (z_score)
+    #prob<-pnorm(((0.7-0.7904786)/0.09908784-pred2)/se2)
     
     data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob)
     data_pred_fin <- as.data.frame (data_pred_fin)
     colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","COPD_risk")
-    print(data_pred_fin) #debug amin 
+    
+    SE_COPD_risk <- sqrt(data_pred_fin$COPD_risk * (1 - data_pred_fin$COPD_risk) / length(rand_int)) #length(rand_int) is n
+    data_pred_fin$COPD_risk_lowerbound <- (data_pred_fin$COPD_risk - 1.96 *  SE_COPD_risk) 
+    data_pred_fin$COPD_risk_upperbound <- (data_pred_fin$COPD_risk + 1.96 *  SE_COPD_risk) 
+    
     #reducing rows in data_pred_fin
     data_if_smoke <- subset(data_pred_fin, smoking == 1)
     data_if_quit <- subset(data_pred_fin, smoking == 0)
     
     data_pred_fin <- subset(data_pred_fin, smoking == 0)
-    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr, COPD_risk))
+    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr))
     
+
     # adding coloumns for smoking vs. quitting scenario
     # we assume a bernulli distribution for uncertainty around probablity. SE = p (1 - p)
-    data_pred_fin$COPD_risk_if_smoke <- data_if_smoke$COPD_risk
-    data_pred_fin$COPD_risk_lowerbound_if_smoke <- (data_if_smoke$COPD_risk - 1.96 * data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk)) 
-    data_pred_fin$COPD_risk_upperbound_if_smoke <- (data_if_smoke$COPD_risk + 1.96 * data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk)) 
+    data_pred_fin$COPD_risk_if_smoke <- (data_if_smoke$COPD_risk)
+    SE_COPD_risk_if_smoke <- sqrt(data_if_smoke$COPD_risk * (1 - data_if_smoke$COPD_risk) / length(rand_int)) #length(rand_int) is n
+    data_pred_fin$COPD_risk_lowerbound_if_smoke <- (data_if_smoke$COPD_risk - 1.96 *  SE_COPD_risk_if_smoke) 
+    data_pred_fin$COPD_risk_upperbound_if_smoke <- (data_if_smoke$COPD_risk + 1.96 *  SE_COPD_risk_if_smoke) 
     
     
-    data_pred_fin$COPD_risk_if_quit <- data_if_quit$COPD_risk
-    data_pred_fin$COPD_risk_lowerbound_if_quit <- (data_if_quit$COPD_risk - 1.96 * data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk))
-    data_pred_fin$COPD_risk_upperbound_if_quit <- (data_if_quit$COPD_risk + 1.96 * data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk))
+    data_pred_fin$COPD_risk_if_quit <- (data_if_quit$COPD_risk)
+    SE_COPD_risk_if_quit <- sqrt (data_if_quit$COPD_risk * (1 - data_if_quit$COPD_risk) / length(rand_int))
+    data_pred_fin$COPD_risk_lowerbound_if_quit <- (data_if_quit$COPD_risk - 1.96 * SE_COPD_risk_if_quit)
+    data_pred_fin$COPD_risk_upperbound_if_quit <- (data_if_quit$COPD_risk + 1.96 * SE_COPD_risk_if_quit)
     
     data_pred_fin$cpackyr_if_smoke <- data_if_smoke$cpackyr
     data_pred_fin$cpackyr_if_quit <- data_if_quit$cpackyr
     
     data_pred_fin <- as.data.frame (data_pred_fin)
     
-    
   }
-      
-  #return(data_pred) #debug Amin. TODO
+  
+  data_pred_fin <- subset(data_pred_fin, year != 0) #starting prediction on year 1
   return(data_pred_fin)
 }
 
@@ -456,7 +504,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
 # Need to first transform you input                       #
 ###########################################################
 
-FEV_calculate_coefficients<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME){
+FEV_calculate_coefficients<- function(respVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME){
   #####################################
   #STEP0: Prepare the data(Chen's code)
   #####################################
@@ -488,10 +536,10 @@ FEV_calculate_coefficients<- function(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFR
   #STEP2: Create inside this func. or outside this function, the FACTOR_NAMES_DATAFRAME - NO, just pass FACTOR_NAMES_DATAFRAME to the function
   
   #STEP3: Use buildformula_factors(BINARY_CODE_DATAFRAME,FACTOR_NAMES_DATAFRAME) to build the equation
-  formula_factors <- buildformula_factors(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
+  formula_factors <- buildformula_factors(respVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
   
   #STEP4: use reformulate to build the full equation(can combine steps 3 and 4)
-  full_formula <- reformulate(formula_factors,response="fev1")
+  full_formula <- reformulate(formula_factors,response=respVar)
   #STEP5: Use lmfin to compute the coefficients
   lmfin <- lmer(full_formula,data_rf4,weights=sw, REML=FALSE)
   #STEP6: Use extract_lmer_coefficients(lmfin) to extract coefficients
