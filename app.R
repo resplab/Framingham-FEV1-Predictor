@@ -747,7 +747,7 @@ server <- function(input, output, session) {
       #                  "Coefficient of Variation (CV) (%)")
       # colnames(aa1)<- years
       if (input$if_quit_FEV1) { 
-        fev1_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "predicted_FEV1", "predicted_FEV1_if_smoke", "predicted_FEV1_if_quit"))
+        fev1_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "predicted_FEV1_if_smoke", "predicted_FEV1_if_quit"))
       } else {
           fev1_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "predicted_FEV1", "lowerbound_PI", "upperbound_PI"))
       }                            
@@ -767,7 +767,7 @@ server <- function(input, output, session) {
       #                  "Coefficient of Variation (CV) (%)")
       # colnames(aa1)<- years
       if (input$if_quit_FEV1_percentpred) {
-        fev1_percentpred_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "percentpred", "percentpred_if_smoke", "percentpred_if_quit"))
+        fev1_percentpred_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "percentpred_if_smoke", "percentpred_if_quit"))
       } else {
         fev1_percentpred_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "percentpred", "percentpred_lowerbound_PI", "percentpred_upperbound_PI"))
       }
@@ -787,7 +787,7 @@ server <- function(input, output, session) {
     
     output$table_COPD_risk<-renderTable({
       if (input$if_quit_COPD_risk) { 
-        fev1_COPD_results_table <- subset (GLOBAL_prediction_results_fev1_fvc, select = c("year", "COPD_risk", "COPD_risk_if_smoke", "COPD_risk_if_quit" ))
+        fev1_COPD_results_table <- subset (GLOBAL_prediction_results_fev1_fvc, select = c("year", "COPD_risk_if_smoke", "COPD_risk_if_quit" ))
       } else {
         fev1_COPD_results_table <- subset (GLOBAL_prediction_results_fev1_fvc, select = c("year", "COPD_risk", "COPD_risk_lowerbound", "COPD_risk_upperbound"))
       }
