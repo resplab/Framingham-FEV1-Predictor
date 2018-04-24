@@ -588,6 +588,7 @@ server <- function(input, output, session) {
         geom_ribbon(aes(ymin=percentpred_lowerbound_PI, ymax=percentpred_upperbound_PI), linetype=2, alpha=0.1, fill=lineColorSmoker) +
         geom_line(aes(y = percentpred_lowerbound_PI), color=errorLineColorSmoker, linetype=2) +
         geom_line(aes(y = percentpred_upperbound_PI), color=errorLineColorSmoker, linetype=2) +
+        labs(x=xlab, y="FEV1 Percent predicted (%)") +
         theme_bw() 
     }
     ggplotly (p) %>% config(displaylogo=F, doubleClick=F,  displayModeBar=F, modeBarButtonsToRemove=buttonremove) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE))
