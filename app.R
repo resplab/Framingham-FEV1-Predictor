@@ -387,7 +387,8 @@ server <- function(input, output, session) {
   
   #'Clear Inputs' button - set all inputs to NULL
   observeEvent(input$reset_button, {
-    shinyjs::js$reset()
+    #shinyjs::js$reset()
+    session$reload()
   })
   
   
