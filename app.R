@@ -160,7 +160,7 @@ ui <- fluidPage(
                   tabPanel("COPD Risk",
                            shinyjs::hidden(div(id = "checkbox_COPD_risk", 
                                                checkboxInput("if_quit_COPD_risk", "Compare with smoking cessation", value = FALSE, width = NULL))),
-                           checkboxInput("CI_COPD_risk", "Show Bernoulli Confidence Interval", value = FALSE, width = NULL),
+                           checkboxInput("CI_COPD_risk", "Show Confidence Interval", value = FALSE, width = NULL),
                            plotlyOutput("COPD_risk"),
                            br(),
                            tableOutput("table_COPD_risk")
@@ -499,12 +499,7 @@ server <- function(input, output, session) {
     
     GLOBAL_prediction_results_fev1<<- make_predictions('fev1', GLOBAL_fev1_lmer_model, predictors)
     GLOBAL_prediction_results_fev1_fvc <<- make_predictions('fev1_fvc', GLOBAL_fev1_fvc_lmer_model, predictors)
-    
-    #Next line: save output for unit test(comment out next line under normal operation)
-    # write.csv(GLOBAL_prediction_results_fev1,file="./FEV_make_predictions_output.CSV")
-    # write.csv(GLOBAL_prediction_results_fev1_fvc,file="./FEV1_FVC_make_predictions_output.CSV")
-    
-    
+
     f <- list(
       family = "Courier New, monospace",
       size = 18,
@@ -522,11 +517,9 @@ server <- function(input, output, session) {
       shinyjs::show ("CI_FEV1_comparison")
       p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = predicted_FEV1_if_smoke), color=lineColorSmoker, linetype=1) +
         geom_line(aes(y = predicted_FEV1_if_quit), color=lineColorNonSmoker, linetype=1) +
-        
-        #annotate("text", 1, 0.5, label="Mean FEV1 decline", colour="black", size=4, hjust=0) +
-        #annotate("text", 1.15, 0.4, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
         labs(x=xlab, y=ylab) +
         theme_bw() 
+      
       if (input$CI_FEV1_comparison) {
         p <- p + geom_ribbon(aes(ymin=FEV1_lowerbound_CI_if_smoke, ymax= upperbound_CI_if_smoke), linetype=2, alpha=0.1, fill=lineColorSmoker) +
           geom_line(aes(y = FEV1_lowerbound_CI_if_smoke), color=errorLineColorSmoker, linetype=2) +
@@ -570,8 +563,6 @@ server <- function(input, output, session) {
       shinyjs::show("CI_FEV1_percpred")
       p <- ggplot(GLOBAL_prediction_results_fev1, aes(year)) + geom_line(aes(y = percentpred_if_smoke), color=lineColorSmoker, linetype=1) +
         geom_line(aes(y = percentpred_if_quit), color=lineColorNonSmoker, linetype=1) +
-        #annotate("text", 1, 25, label="Percent predicted FEV1", colour="black", size=4, hjust=0) +
-        #annotate("text", 1.15, 15, label=coverageInterval, colour=errorLineColor, size=4, hjust=0) +
         labs(x=xlab, y="FEV1 Percent predicted (%)") +
         theme_bw() 
       if (input$CI_FEV1_percpred) {
@@ -667,8 +658,6 @@ server <- function(input, output, session) {
     fev1_full_file_name = paste("./",paste(file_name(), collapse=""), "-fev1", ".rds",sep="")
     fev1_fvc_full_file_name = paste("./",paste(file_name(), collapse=""),"-fev1_fvc", ".rds",sep="")
     
-    # browser()
-    
     #if file exists but model has not been loaded, load the model from the file
     if(file.exists(fev1_full_file_name) && is.null(GLOBAL_fev1_lmer_model_loaded_FLAG)){
       progress$set(message = "Model found. Loading the model...", value = 0.50)
@@ -757,8 +746,12 @@ server <- function(input, output, session) {
       # rownames(aa1)<-c("Mean FEV1", "95% credible interval-upper bound", "95% credible interval-lower bound",
       #                  "Coefficient of Variation (CV) (%)")
       # colnames(aa1)<- years
-      
-      return(GLOBAL_prediction_results_fev1)
+      if (input$if_quit_FEV1) { 
+        fev1_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "predicted_FEV1", "predicted_FEV1_if_smoke", "predicted_FEV1_if_quit"))
+      } else {
+          fev1_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "predicted_FEV1", "lowerbound_PI", "upperbound_PI"))
+      }                            
+      return(fev1_results_table)
     },
     include.rownames=T,
     caption="FEV1 Projections",
@@ -773,8 +766,12 @@ server <- function(input, output, session) {
       # rownames(aa1)<-c("Mean FEV1", "95% credible interval-upper bound", "95% credible interval-lower bound",
       #                  "Coefficient of Variation (CV) (%)")
       # colnames(aa1)<- years
-      
-      return(GLOBAL_prediction_results_fev1)
+      if (input$if_quit_FEV1_percentpred) {
+        fev1_percentpred_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "percentpred", "percentpred_if_smoke", "percentpred_if_quit"))
+      } else {
+        fev1_percentpred_results_table <- subset (GLOBAL_prediction_results_fev1, select = c("year", "percentpred", "percentpred_lowerbound_PI", "percentpred_upperbound_PI"))
+      }
+      return(fev1_percentpred_results_table)
     },
     include.rownames=T,
     caption="FEV1 Percent Predicted Projections",
@@ -789,7 +786,12 @@ server <- function(input, output, session) {
     })
     
     output$table_COPD_risk<-renderTable({
-      return(GLOBAL_prediction_results_fev1_fvc)
+      if (input$if_quit_COPD_risk) { 
+        fev1_COPD_results_table <- subset (GLOBAL_prediction_results_fev1_fvc, select = c("year", "COPD_risk", "COPD_risk_if_smoke", "COPD_risk_if_quit" ))
+      } else {
+        fev1_COPD_results_table <- subset (GLOBAL_prediction_results_fev1_fvc, select = c("year", "COPD_risk", "COPD_risk_lowerbound", "COPD_risk_upperbound"))
+      }
+      return(fev1_COPD_results_table)
     },
     include.rownames=T,
     caption="FEV1/FVC Prediction",
