@@ -708,7 +708,6 @@ server <- function(input, output, session) {
       EQUATION_FACTORS3 <- c('(year|RANDOMID)',#factors for fev1_0 unknown - ask Chen
                              NA, NA, 'triglycerides:cpackyr', NA, 'albumin:sex',NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA, NA)
       FACTORS_NAMES_DATAFRAME <- data.frame(INPUTS, EQUATION_FACTORS1, EQUATION_FACTORS2, EQUATION_FACTORS3)
-      print (FACTORS_NAMES_DATAFRAME)
       progress$set(message = "Fitting new reduced model. This might take a few minutes", value = 0.30)
       
       #save data frames for unit tests - commented out under normal operation
