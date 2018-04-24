@@ -630,7 +630,6 @@ server <- function(input, output, session) {
           geom_line(aes(y = COPD_risk_upperbound_if_quit*100), color = errorLineColorNonSmoker, linetype=2)
       }
     } else {
-      
       p <- ggplot(GLOBAL_prediction_results_fev1_fvc, aes(year)) + geom_line(aes(y = COPD_risk_if_smoke*100), color=lineColorSmoker, linetype=1) +
         labs(x=xlab, y="COPD Risk (%)") +
         theme_bw() 

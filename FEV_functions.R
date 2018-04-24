@@ -416,7 +416,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
       #reducing rows in data_pred_fin
       data_if_smoke <- subset(data_pred_fin, smoking == 1)
       data_if_quit <- subset(data_pred_fin, smoking == 0)
-      data_pred_fin <- subset(data_pred_fin, smoking == 0)
+      data_pred_fin <- subset(data_pred_fin, smoking == 1)
       data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr,  upperbound_CI, lowerbound_CI, percentpred_upperbound_CI, percentpred_lowerbound_CI))
       
       #adding coloumns for smoking vs. quitting scenario
@@ -465,7 +465,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
     data_if_smoke <- subset(data_pred_fin, smoking == 1)
     data_if_quit <- subset(data_pred_fin, smoking == 0)
     
-    data_pred_fin <- subset(data_pred_fin, smoking == 0)
+    data_pred_fin <- subset(data_pred_fin, smoking == 1) #making smoking the default scenario
     data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr))
     
 
