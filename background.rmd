@@ -1,3 +1,6 @@
+---
+title: "Background"
+---
 # ← Start Here
 
 Enter patient data in the left panel and press "Run the prediction model." 

@@ -105,6 +105,11 @@ ui <- fluidPage(
       br(),
       br(),
       shinyjs::hidden(
+        div(id = "COPD_detected",
+            HTML(paste(tags$span(style="color:red", "Airflow obstruction (FEV1/FVC<0.7). Use Individualized FEV1 prediction in COPD app instead.")))
+        )
+      ),
+      shinyjs::hidden(
         div(id = "FEV1_range",
             HTML(paste(tags$span(style="color:red", "FEV1 must be between 1L and 5L")))
         )
@@ -228,12 +233,13 @@ server <- function(input, output, session) {
   observe({
     alcoholInputTest <- as.numeric(is.na(input$beer) + is.na(input$wine) + is.na(input$cocktail))
     pkyr <- as.numeric(is.na(input$daily_cigs) + is.na(input$smoke_year))
-    
-    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc_0) || (input$fvc_0 == "") || is.na (input$age) || (input$age == "") || (is.null (input$sex) || (input$sex == ""))|| is.na (input$height) || (input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) || (input$trig>0 && pkyr == 2)  )) {
+
+    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc_0) || (input$fvc_0 == "") || is.na (input$age) || (input$age == "") || is.null (input$sex) || (input$sex == "") || is.na (input$height) || input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) || (!is.na(input$trig) && input$trig>0 && pkyr == 2) || (input$fev1_0/input$fvc_0) <= 0.7) {
       shinyjs::disable("submit")
     }else {
       shinyjs::enable("submit")
     }
+      
   })  
   
   observe({
@@ -244,13 +250,16 @@ server <- function(input, output, session) {
     }
   })    
   
-    observe({
+  observe({
       if (!is.na(input$fvc_0) && (input$fvc_0!="")) {
         if ((input$fvc_0 < 1)  || (input$fvc_0 > 8))  {
           shinyjs::show (id = "FVC_range", anim = TRUE)}
-        else shinyjs::hide (id = "FVC_range", anim = TRUE)
+        else {
+          shinyjs::hide (id = "FVC_range", anim = TRUE)
+        }
       }
     })
+    
   observe({
     if (!is.na(input$age) && (input$age!="")) {
       if ((input$age < 20)  || (input$age > 100))  {
@@ -259,6 +268,14 @@ server <- function(input, output, session) {
     }
   })  
   
+  observe({
+    if (!is.na(input$fev1_0) && (input$fev1_0!="") && !is.na(input$fvc_0) && (input$fvc_0!="")) {
+      if ((input$fev1_0/input$fvc_0) <= 0.7)  {
+        shinyjs::show (id = "COPD_detected", anim = TRUE)}
+      else {
+        shinyjs::hide (id = "COPD_detected", anim = TRUE)}
+    }
+  }) 
   observe({
     if (!is.na(input$height) && (input$height!="")) {
       if ((input$height < 100)  || (input$height > 250))  {

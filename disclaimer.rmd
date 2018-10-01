@@ -1,4 +1,6 @@
-
+---
+title: "Disclaimer"
+---
 ### TERMS OF USE 
 
 The INDIVIDUALIZED FRAMINGHAM LUNG FUNCTION DECLINE PREDICTOR (the “LUNG FUNCTION PREDICTOR”) is a web-based tool to provide a predictive model of lung function decline over time.  The LUNG FUNCTION PREDICTOR was developed by Dr. Mohsen Sadatsafavi, Amin Adibi, Dr. Wenjia Chen, Dr. Abdollah Safari, Jane Krot, Dr. Mark Fitzgerald and Dr. Don Sin at UBC. 
