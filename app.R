@@ -44,7 +44,7 @@ ui <- fluidPage(
   shinyjs::inlineCSS(appCSS),
   theme = shinytheme("united"),
   tags$head(tags$script(src = "message-handler.js")),
-  titlePanel("Individualized Framingham Lung Function Decline Predictor"),
+  titlePanel("Lung Function Predictor for General Population"),
   
   sidebarLayout(
     
@@ -145,6 +145,7 @@ ui <- fluidPage(
             HTML(paste(tags$span(style="color:red", "Please enter frequency and history of smoking")))
         )
       ),
+      checkboxInput("termsCheck",HTML(paste("I agree to ", tags$span(style="color:tomato", tags$a(href="./disclaimer.rmd", target="_blank", "terms")), sep = "")), FALSE),
       actionButton("submit", "Run the prediction model"),
       actionButton("reset_button", "Start over")
     ),
@@ -234,7 +235,7 @@ server <- function(input, output, session) {
     alcoholInputTest <- as.numeric(is.na(input$beer) + is.na(input$wine) + is.na(input$cocktail))
     pkyr <- as.numeric(is.na(input$daily_cigs) + is.na(input$smoke_year))
 
-    if (is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc_0) || (input$fvc_0 == "") || is.na (input$age) || (input$age == "") || is.null (input$sex) || (input$sex == "") || is.na (input$height) || input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) || (!is.na(input$trig) && input$trig>0 && pkyr == 2) || (input$fev1_0/input$fvc_0) <= 0.7) {
+    if (!input$termsCheck || is.na(input$fev1_0) || (input$fev1_0 == "") || is.na(input$fvc_0) || (input$fvc_0 == "") || is.na (input$age) || (input$age == "") || is.null (input$sex) || (input$sex == "") || is.na (input$height) || input$height == "" || (alcoholInputTest > 0 && alcoholInputTest < 3) || (!is.na(input$trig) && input$trig>0 && pkyr == 2) || (input$fev1_0/input$fvc_0) <= 0.7) {
       shinyjs::disable("submit")
     }else {
       shinyjs::enable("submit")
