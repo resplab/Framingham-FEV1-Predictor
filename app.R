@@ -106,7 +106,7 @@ ui <- fluidPage(
       br(),
       shinyjs::hidden(
         div(id = "COPD_detected",
-            HTML(paste(tags$span(style="color:red", "Airflow obstruction (FEV1/FVC<0.7). Use Individualized FEV1 prediction in COPD app instead.")))
+            HTML(paste(tags$span(style="color:red", "Airflow obstruction (FEV1/FVC<0.7). The individual already satisfies the definition of airflow obstruction. Please use Individualized FEV1 prediction in COPD app instead.")))
         )
       ),
       shinyjs::hidden(
