@@ -17,7 +17,7 @@ Please refer to the manuscript for more details on the structure of the model an
 
 Please cite this paper when using the results of this web application:
 
-```Chen, Wenjia et al. Individualized prediction of lung function decline and risk of COPD in the general adult population. To be submitted to JAMA.```
+```Chen, Wenjia et al. Individualized prediction of lung function decline and risk of COPD in the general adult population. Under review```
 
 #### Bug Report
 
