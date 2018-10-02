@@ -145,7 +145,7 @@ ui <- fluidPage(
             HTML(paste(tags$span(style="color:red", "Please enter frequency and history of smoking")))
         )
       ),
-      checkboxInput("termsCheck",HTML(paste("I agree to ", tags$span(style="color:tomato", tags$a(href="./disclaimer.rmd", target="_blank", "terms")), sep = "")), FALSE),
+      checkboxInput("termsCheck",HTML(paste("I agree to ", tags$span(style="color:tomato", tags$a(href="./disclaimer.html", target="_blank", "terms")), sep = "")), FALSE),
       actionButton("submit", "Run the prediction model"),
       actionButton("reset_button", "Start over")
     ),
