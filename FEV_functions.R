@@ -449,10 +449,19 @@ make_predictions <- function(respVar, lmfin, predictors) {
 
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
     
-    z_score <- (0.7 - pred2*0.09908784 - 0.7904786) / (se2*0.09908784)
-    prob <- pnorm (z_score)
-    #prob<-pnorm(((0.7-0.7904786)/0.09908784-pred2)/se2)
+    # 0.7 threshold rule - Currently disabled
+    # z_score <- (0.7 - pred2*0.09908784 - 0.7904786) / (se2*0.09908784)
+    #prob <- pnorm (z_score)
+
+    # LLN rule. Currently enabled
     
+    data_pred2$lln[data_pred2$sex==1]<-78.388-0.2066*(data_pred2$age[data_pred2$sex==1]*9.249913362+36.61082037+data_pred2$year[data_pred2$sex==1])
+    data_pred2$lln[data_pred2$sex==2]<-81.015-0.2125*(data_pred2$age[data_pred2$sex==2]*9.249913362+36.61082037+data_pred2$year[data_pred2$sex==2])
+    lln<-data_pred2$lln
+    prob<-pnorm((lln/100-(pred2*0.09908784+ 0.7904786))/( se2*.7904786))
+    
+    # End of LLN rule
+
     data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob)
     data_pred_fin <- as.data.frame (data_pred_fin)
     colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","COPD_risk")
