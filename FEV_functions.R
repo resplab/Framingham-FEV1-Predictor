@@ -143,7 +143,7 @@ listoffactors = NULL #initialize listoffactors
 
 buildformula_factors <- function(BINARY_CODE_DATAFRAME,FACTOR_NAMES_DATAFRAME){
   if(!is.null(listoffactors)){listoffactors <- NULL}
-
+  
   for(i in 1:nrow(BINARY_CODE_DATAFRAME)){
     if (BINARY_CODE_DATAFRAME$file_name[i] == 1){     #if INPUT value is not null
       listoffactors <- c(listoffactors,unlist((apply(FACTOR_NAMES_DATAFRAME[,(2:ncol(FACTOR_NAMES_DATAFRAME))], 1, function(x) unname(x[!is.na(x)])))[i]))
@@ -158,74 +158,79 @@ FEV_calculate_lmer_fn<- function(respVar, BINARY_CODE_DATAFRAME,FACTORS_NAMES_DA
   #####################################
   #STEP0: Prepare the data(Chen's code)
   #####################################
-
+  
   data_rf4 <- readRDS("./data_rf4.rds") #load reduced size file
   
   #-------------------------------------------#
-  #   Running the Random effects model	    #
+  #   Running the Random effects model     #
   #-------------------------------------------#
   # Note: the model is based on framingham data data_rf4 (centered/scaled, with a censoring variable)
   #Step 1: calculate stablized inverse probability weights of dropping out to the regression model;
-  tstarting_time<-ipw::tstartfun(RANDOMID, visit, data_rf4)		#Preparing the data for calculation of inverse probability weight of being censored
+  tstarting_time<-ipw::tstartfun(RANDOMID, visit, data_rf4)                         #Preparing the data for calculation of inverse probability weight of being censored
   # Calculate inverse probability weight of being censored, which is a stablized inverse probability weight
   ipw<- ipw::ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
-              denominator=~age+agecat+sex+triglycerides+hematocrit+albumin+globulin+ALP+wine+cocktail+WBC
-              +QRS_intv+alcohol_indx+height2+broncho+dyspnea_exc+night_sym,
-              id = RANDOMID, tstart = tstarting_time, timevar = visit, type = "first",
-              data = data_rf4)
-
+                   denominator=~age+agecat+sex+triglycerides+hematocrit+albumin+globulin+ALP+wine+cocktail+WBC
+                   +QRS_intv+alcohol_indx+height2+broncho+dyspnea_exc+night_sym,
+                   id = RANDOMID, tstart = tstarting_time, timevar = visit, type = "first",
+                   data = data_rf4)
+  
   data_rf4<-cbind.data.frame(data_rf4,ipw$ipw.weights) #add censoring variable to data
-  colnames(data_rf4)[27]<-'sw'		#change the name of the weight to "sw" - stablized weights
-
+  colnames(data_rf4)[27]<-'sw'                  #change the name of the weight to "sw" - stablized weights
+  
+  
   ########################################################
   #STEP1: Generate BINARY_CODE_DATAFRAME from the filename - NO, just pass BINARY_CODE_DATAFRAME to the function
   ########################################################
-
+  
   #STEP2: Create inside this func. or outside this function, the FACTOR_NAMES_DATAFRAME - NO, just pass FACTOR_NAMES_DATAFRAME to the function
-
+  
   #STEP3: Use buildformula_factors(BINARY_CODE_DATAFRAME,FACTOR_NAMES_DATAFRAME) to build the equation
   formula_factors <- buildformula_factors(BINARY_CODE_DATAFRAME,FACTORS_NAMES_DATAFRAME)
   #STEP4: use reformulate to build the full equation(can combine steps 3 and 4)
   # formula_factors <- c(formula_factors, "year", "year2", "(year|RANDOMID)") #NOTE: "year", "year2", "(year|RANDOMID)" are now all mapped to fev1_0 input
   full_formula <- reformulate(formula_factors,response=respVar)
   #STEP5: Use lmfin to compute the coefficients
-  lmfin <- lmer(full_formula,data_rf4,weights=sw, REML=FALSE)
+  if (respVar == 'fev1') {
+    lmfin <- lmer(full_formula,data_rf4,weights=sw, REML=FALSE)
+  } else if (respVar == 'fev1_fvc') {
+    train <- readRDS("./train.rds")
+    lmfin <- lmer(full_formula,train,weights=sw, REML=FALSE)
+  }
   return(lmfin)
 }
 
-
 make_predictions <- function(respVar, lmfin, predictors) {
-
+  
   #Add a RANDOMID to make predictions
   predictors$RANDOMID<-1
   
   if (respVar == 'fev1_fvc') {
-    predictors$fev1_fvc_0 <- predictors$fev1_0 / predictors$fvc_0
+    predictors$fev1_fvc_0 <- predictors$fev1_0/predictors$fvc_0
   }
-
+  
   # Create age category
   predictors$agecat[predictors$age>=65]<- 3
   # Extrapolationg 
-
+  
   predictors$agecat[predictors$age<65 & predictors$age>=50]<-3
   predictors$agecat[predictors$age<50 & predictors$age>=35]<-2
   predictors$agecat[predictors$age<35 & predictors$age>=20]<-1
   predictors$agecat <- as.factor(predictors$agecat)
-
+  
   # Create sex category
   predictors$sexcat[predictors$sex=='male'] <- 1
   predictors$sexcat[predictors$sex=='female'] <- 2
   # predictors$sexcat<-as.factor(predictors$sexcat)
   predictors$sex <- as.factor(predictors$sexcat)
-
+  
   #Wenjia: this is the category that we use
   #Create broncho category
   predictors$bronchocat[predictors$broncho=='Current use'] <- 1
   predictors$bronchocat[predictors$broncho=='Former use'] <- 2
   predictors$bronchocat[predictors$broncho=='No use'] <- 0
   predictors$broncho <- as.factor(predictors$bronchocat)
-
-
+  
+  
   #Wenjia: this is the coding of categories in the Framingham data
   # Create dyspnea category
   predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='Yes, on walking up stairs or other vigorous excercise'] <- 1
@@ -233,14 +238,14 @@ make_predictions <- function(respVar, lmfin, predictors) {
   predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='On any slight exertion'] <- 3
   predictors$dyspnea_exc_cat[predictors$dyspnea_exc=='No'] <- 0
   predictors$dyspnea_exc <- as.factor(predictors$dyspnea_exc_cat)
-
+  
   # Wenjia: this is the coding of categories in Framingham
   # Create night symptoms category
   predictors$night_sym_cat[predictors$night_sym=='Yes'] <- 4
   predictors$night_sym_cat[predictors$night_sym=='Maybe'] <- 5
   predictors$night_sym_cat[predictors$night_sym=='No'] <- 3
   predictors$night_sym <- as.factor(predictors$night_sym_cat)
-
+  
   # Center input predictors
   predictors$fev1_0[!is.na(predictors$fev1_0)]<-(predictors$fev1_0-2.979447188)/0.794445308 #WC: I centered all continuous predictors except for cum_smoke and year
   if (respVar == 'fev1_fvc') predictors$fev1_fvc_0[!is.na(predictors$fev1_fvc_0)]<-(predictors$fev1_fvc_0-0.7904786)/0.09908784  
@@ -259,24 +264,24 @@ make_predictions <- function(respVar, lmfin, predictors) {
   # predictors$height2[!is.na(predictors$height2)]<-(predictors$height^2-28422.20329)/3185.597537 #this is centered height square
   predictors$cpackyr<-round((predictors$smoke_year*predictors$daily_cigs)/20,0) #this is a derived variable, need two variables, dont need to center
   predictors$age<-(predictors$age-36.61082037)/9.249913362 #assuming nobody will miss age entry
-
+  
   #make sure all categorical variables are factors
   predictors$sex<-as.factor(predictors$sex)
-
+  
   #generate year for prediction
   year<-c(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
   year2<-year^2
   year<-cbind(year,year2)
-
+  
   data_pred<-merge(predictors,year,all=TRUE)
   #Now I will create two scenario for 20-year prediction of FEV1 decline
   #Scenario 1: quit smoke today (smk=0)
   #Scenario 2: continue to smoke at current speed (smk=1)
   smk<-c(0,1)
   data_pred<-merge(data_pred,smk,all=TRUE) #From here on, for quitting smoke and continue to smoke, each scenario has 20 years of follow-up
-
+  
   #Make sure non-smoker's baseline CUM_SMoke=0
-
+  
   # data_pred <- rename(data_pred, replace=c("y"="smk")) #JK: added
   #because we sometimes get teh following Warning: Error in : Expressions are currently not supported in `rename()
   data_pred <- plyr:::rename(data_pred, replace=c("y"="smk")) #JK: added
@@ -284,22 +289,30 @@ make_predictions <- function(respVar, lmfin, predictors) {
   data_pred$cpackyr[data_pred$smk==0]<-data_pred$cpackyr[data_pred$smk==0]
   data_pred$cpackyr[data_pred$smk==1]<-data_pred$cpackyr[data_pred$smk==1]+data_pred$daily_cigs[data_pred$smk==1]*data_pred$year[data_pred$smk==1]/20 #If continue to smoke, calculate cumulative pack-years over time
   #Note: for smoke=0, pack-years will continue all the time
-
+  
   #12/12/2017
   # Warning message:
   #   In data_pred$cum_smoke[data_pred$smk == 1] <- data_pred$cum_smoke +  :
   #   number of items to replace is not a multiple of replacement length
-
-
+  
+  
   ##############################################################
   #  When data is ready, prediction begins here                #
   ##############################################################
   #Obtain fixed Coefficients;
+  
+  
+  # Prediction;
+  pred<-lme4:::predict.merMod(object=lmfin,newdata=data_pred,re.form=NA, allow.new.levels=TRUE) #JK:predict is a generic function for predictions from the results of various model fitting functions.
+  
+  test <- readRDS("./test.rds")
+  predt<-lme4:::predict.merMod(object=lmfin,newdata=test,re.form=NA, allow.new.levels=TRUE)
+  
   # lmfin <- lmer_object
   beta<-fixef(lmfin) #JK: extracting fixed-effects estimates
   vcov<-vcov(lmfin) #JK: returns the variance-covariance matrix of the main parameters of a fitted model object
   vbeta<-diag(vcov(lmfin)) #JK: extract or replace the diagnonal of a variance-covariance matrix, or contruct a diagonal variance-covariance matrix
-
+  
   #vARIANCE-COVARIANCE coefficients
   vc<-as.data.frame(VarCorr(lmfin)) #JK: functions to check if an object is a data frame, or coerce it if possible;
   #JK: VarCorr() calculates the estimated variances, SD and correlations between the random-effects terms in a mixed-effects model.
@@ -308,17 +321,15 @@ make_predictions <- function(respVar, lmfin, predictors) {
   v.yr<-vc$vcov[2]
   cov.int.yr<-vc$vcov[3]
   v.err<-vc$vcov[4]
-
-  # Prediction;
   
-  pred<-lme4:::predict.merMod(object=lmfin,newdata=data_pred,re.form=NA, allow.new.levels=TRUE) #JK:predict is a generic function for predictions from the results of various model fitting functions.
   
   data_pred2<-cbind(data_pred,pred)
-
+  test2<-cbind(test,predt)
+  
   #get predicted fev1 at baseline for calculation (pfev0)
   if (respVar == 'fev1') { 
     pfev0<-subset(data_pred2,year==0 & smk==0,select=c(RANDOMID,pred))
-   # print(pfev0)  #debug amin
+    # print(pfev0)  #debug amin
     colnames(pfev0)[2]<-"pfev0"
     data_pred2<-join(data_pred2,pfev0,by='RANDOMID', type='right',match='all')
     
@@ -329,13 +340,21 @@ make_predictions <- function(respVar, lmfin, predictors) {
     #print(pfev_fvc0)  #debug amin
     colnames(pfev_fvc0)[2]<-"pfev_fvc0"
     data_pred2<-join(data_pred2,pfev_fvc0,by='RANDOMID', type='right',match='all')
+    
+    pfev1_fvc0t<-subset(test2,year==0,select=c(RANDOMID,predt))
+    colnames(pfev1_fvc0t)[2]<-"pfev1_fvc0"
+    test2<-join(test2,pfev1_fvc0t,by='RANDOMID', type='right',match='all')
   }
-
+  
   #Calculation the bivariate correlation between baseline and future FEV1 value, used for predition interval
   cov11<-v.int+2*data_pred2$year*cov.int.yr+data_pred2$year2*v.yr+v.err
   cov12<-v.int+data_pred2$year*cov.int.yr
   cov22<-v.int+v.err
-
+  
+  cov11t<-v.int+2*test2$year*cov.int.yr+test2$year2*v.yr+v.err
+  cov12t<-v.int+test2$year*cov.int.yr
+  cov22t<-v.int+v.err
+  
   #Calculation the bivariate correlation between baseline and future FEV1 value, used for confidence interval
   rand_eff <- ranef(lmfin)
   rand_eff <- as.data.frame(rand_eff)
@@ -349,8 +368,6 @@ make_predictions <- function(respVar, lmfin, predictors) {
   # print (v.int.rand) #debug
   # print (v.yr.rand) #debug
   # print (vc$vcov) #debug
-  
-  
   
   cov11.rand <-v.int.rand+2*data_pred2$year*cov.int.yr.rand+data_pred2$year2*v.yr.rand+v.err
   cov12.rand <-v.int.rand+data_pred2$year*cov.int.yr.rand
@@ -372,13 +389,12 @@ make_predictions <- function(respVar, lmfin, predictors) {
     se3<-se2*0.794445308
     se3.rand <- se2.rand*0.794445308
     
-    
     lower3<-pred3-1.960463534*se3 #lower 95% prediction interval
     upper3<-pred3+1.960463534*se3 #upper 95% prediction interval
-  
+    
     lower3.rand<-pred3-1.960463534*se3.rand #lower 95% confidence interval
     upper3.rand<-pred3+1.960463534*se3.rand #upper 95% confidence interval
-  
+    
     data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr,data_pred2$fev1_0,pred3,se3, lower3, upper3, se3.rand, lower3.rand, upper3.rand)
     data_pred_fin <- as.data.frame(data_pred_fin)
     colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_0","predicted_FEV1","predicted_SE_PI", "lowerbound_PI", "upperbound_PI", "predicted_SE_CI", "lowerbound_CI", "upperbound_CI")
@@ -396,12 +412,12 @@ make_predictions <- function(respVar, lmfin, predictors) {
     
     #calculating %predicted FEV1, sex == 1 male. sex == 1 female. Following the NHANES-III algorithm, using 25y/o white Caucasian as reference,for people aged 20 years and above
     if   (predictors$sex == 1) { 
-    data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_upperbound_PI <- 100 * data_pred_fin$upperbound_PI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_lowerbound_PI <- 100 * data_pred_fin$lowerbound_PI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_upperbound_CI <- 100 * data_pred_fin$upperbound_CI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    data_pred_fin$percentpred_lowerbound_CI <- 100 * data_pred_fin$lowerbound_CI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
-    
+      data_pred_fin$percentpred <- 100 * data_pred_fin$predicted_FEV1 / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+      data_pred_fin$percentpred_upperbound_PI <- 100 * data_pred_fin$upperbound_PI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+      data_pred_fin$percentpred_lowerbound_PI <- 100 * data_pred_fin$lowerbound_PI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+      data_pred_fin$percentpred_upperbound_CI <- 100 * data_pred_fin$upperbound_CI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+      data_pred_fin$percentpred_lowerbound_CI <- 100 * data_pred_fin$lowerbound_CI / ((0.5536+(-0.01303)*25+(-0.000172)*25*25+0.00014098*predictors$height*predictors$height))
+      
     }
     
     if   (predictors$sex == 2) { 
@@ -411,58 +427,87 @@ make_predictions <- function(respVar, lmfin, predictors) {
       data_pred_fin$percentpred_upperbound_CI <- 100 * data_pred_fin$upperbound_CI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
       data_pred_fin$percentpred_lowerbound_CI <- 100 * data_pred_fin$lowerbound_CI / ((0.4333+(-0.00361)*25+(-0.000194)*25*25+0.00011496*predictors$height*predictors$height))
       
-      }
-
-      #reducing rows in data_pred_fin
-      data_if_smoke <- subset(data_pred_fin, smoking == 1)
-      data_if_quit <- subset(data_pred_fin, smoking == 0)
-      data_pred_fin <- subset(data_pred_fin, smoking == 0)
-      data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr,  upperbound_CI, lowerbound_CI, percentpred_upperbound_CI, percentpred_lowerbound_CI))
-      
-      #adding coloumns for smoking vs. quitting scenario
-      data_pred_fin$predicted_FEV1_if_smoke <- data_if_smoke$predicted_FEV1
-      data_pred_fin$FEV1_lowerbound_CI_if_smoke <- data_if_smoke$lowerbound_CI
-      data_pred_fin$upperbound_CI_if_smoke <- data_if_smoke$upperbound_CI
-      
-      
-      data_pred_fin$predicted_FEV1_if_quit <- data_if_quit$predicted_FEV1
-      data_pred_fin$FEV1_lowerbound_CI_if_quit <- data_if_quit$lowerbound_CI
-      data_pred_fin$upperbound_CI_if_quit <- data_if_quit$upperbound_CI
-      
-      data_pred_fin$cpackyr_if_smoke <- data_if_smoke$cpackyr
-      data_pred_fin$cpackyr_if_quit <- data_if_quit$cpackyr
-      
-      
-      
-      #same for percentpred
-      data_pred_fin$percentpred_if_smoke <- data_if_smoke$percentpred
-      data_pred_fin$percentpred_FEV1_lowerbound_CI_if_smoke <- data_if_smoke$percentpred_lowerbound_CI
-      data_pred_fin$percentpred_upperbound_CI_if_smoke <- data_if_smoke$percentpred_upperbound_CI
-      
-      
-      data_pred_fin$percentpred_if_quit <- data_if_quit$percentpred
-      data_pred_fin$percentpred_FEV1_lowerbound_CI_if_quit <- data_if_quit$percentpred_lowerbound_CI
-      data_pred_fin$percentpred_upperbound_CI_if_quit <- data_if_quit$percentpred_upperbound_CI
-      
+    }
+    
+    #reducing rows in data_pred_fin
+    data_if_smoke <- subset(data_pred_fin, smoking == 1)
+    data_if_quit <- subset(data_pred_fin, smoking == 0)
+    data_pred_fin <- subset(data_pred_fin, smoking == 0)
+    data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr,  upperbound_CI, lowerbound_CI, percentpred_upperbound_CI, percentpred_lowerbound_CI))
+    
+    #adding coloumns for smoking vs. quitting scenario
+    data_pred_fin$predicted_FEV1_if_smoke <- data_if_smoke$predicted_FEV1
+    data_pred_fin$FEV1_lowerbound_CI_if_smoke <- data_if_smoke$lowerbound_CI
+    data_pred_fin$upperbound_CI_if_smoke <- data_if_smoke$upperbound_CI
+    
+    
+    data_pred_fin$predicted_FEV1_if_quit <- data_if_quit$predicted_FEV1
+    data_pred_fin$FEV1_lowerbound_CI_if_quit <- data_if_quit$lowerbound_CI
+    data_pred_fin$upperbound_CI_if_quit <- data_if_quit$upperbound_CI
+    
+    data_pred_fin$cpackyr_if_smoke <- data_if_smoke$cpackyr
+    data_pred_fin$cpackyr_if_quit <- data_if_quit$cpackyr
+    
+    
+    
+    #same for percentpred
+    data_pred_fin$percentpred_if_smoke <- data_if_smoke$percentpred
+    data_pred_fin$percentpred_FEV1_lowerbound_CI_if_smoke <- data_if_smoke$percentpred_lowerbound_CI
+    data_pred_fin$percentpred_upperbound_CI_if_smoke <- data_if_smoke$percentpred_upperbound_CI
+    
+    
+    data_pred_fin$percentpred_if_quit <- data_if_quit$percentpred
+    data_pred_fin$percentpred_FEV1_lowerbound_CI_if_quit <- data_if_quit$percentpred_lowerbound_CI
+    data_pred_fin$percentpred_upperbound_CI_if_quit <- data_if_quit$percentpred_upperbound_CI
+    
   } else if (respVar == 'fev1_fvc') {
     pred2<-data_pred2$pred+data_pred2$cov12*(data_pred2$fev1_fvc_0-data_pred2$pfev_fvc0)/data_pred2$cov22
-
     se2<-sqrt(data_pred2$cov11-data_pred2$cov12*data_pred2$cov12/data_pred2$cov22)
     
     # 0.7 threshold rule - Currently disabled
-     #z_score <- (0.7 - pred2*0.09908784 - 0.7904786) / (se2*0.09908784)
-     #prob <- pnorm (z_score)
-
-    # LLN rule. Currently enabled
+    #z_score <- (0.7 - pred2*0.09908784 - 0.7904786) / (se2*0.09908784)
+    #prob <- pnorm (z_score)
     
+    # LLN rule. Currently enabled
     data_pred2$lln[data_pred2$sex==1]<-78.388-0.2066*(data_pred2$age[data_pred2$sex==1]*9.249913362+36.61082037+data_pred2$year[data_pred2$sex==1])
     data_pred2$lln[data_pred2$sex==2]<-81.015-0.2125*(data_pred2$age[data_pred2$sex==2]*9.249913362+36.61082037+data_pred2$year[data_pred2$sex==2])
     lln<-data_pred2$lln
     prob<-pnorm((lln/100-(pred2*0.09908784+ 0.7904786))/(se2*0.09908784))
     
+    #platt scaling - calibrate
+    test2$lln[test2$sex==1]<-78.388-0.2066*(test2$age[test2$sex==1]*9.249913362+36.61082037+test2$year[test2$sex==1])
+    test2$lln[test2$sex==2]<-81.015-0.2125*(test2$age[test2$sex==2]*9.249913362+36.61082037+test2$year[test2$sex==2])
+    test2$airflowlim<-(test2$fev1_fvc*0.09908784+0.7904786)<test2$lln/100
+    
+    tab<-table(test2$airflowlim)
+    tab2<-data.frame(rbind(tab))
+    n1<-tab2[1,1]
+    n2<-tab2[1,2]
+    test2$airflowlim2 [test2$airflowlim=="FALSE"] <-1/(n1+2)
+    test2$airflowlim2 [test2$airflowlim=="TRUE"] <-(n2+1)/(n2+2)
+    
+    t_baseline<-subset(test2,year==0)
+    t_baseline<-cbind.data.frame(t_baseline$RANDOMID, t_baseline$fev1, t_baseline$fev1_fvc)
+    colnames(t_baseline)<-c("RANDOMID","fev1_0","fev1_fvc0")
+    test3<-join(test2,t_baseline,by='RANDOMID',type='right', match='all')
+    
+    pred2t<-test3$predt+cov12t*(test3$fev1_fvc0-test3$pfev1_fvc0)/cov22t
+    se2t<-sqrt(cov11t-cov12t*cov12t/cov22t)
+    
+    pt<-pnorm((test3$lln/100-(pred2t*0.09908784+0.7904786))/(se2t*0.09908784))
+    test4<-cbind(test3,pred2t,se2t,pt)
+    
+    calib.data.frame <- subset(test4, visit>1, select=c(airflowlim2,pt))
+    colnames(calib.data.frame) <- c("y", "x")
+    calib.model <- glm(y ~ x, calib.data.frame,family="gaussian")
+    calib.data.frame <- data.frame(prob)
+    names(calib.data.frame) <- c("x")
+    prob2 <- predict(calib.model, newdata=calib.data.frame, type="response")
+    
+    
     # End of LLN rule
-
-    data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob)
+    
+    data_pred_fin<-cbind(data_pred2$year, data_pred2$smk, data_pred2$cpackyr, data_pred2$fev1_fvc_0, prob2)
     data_pred_fin <- as.data.frame (data_pred_fin)
     colnames(data_pred_fin)<-c("year","smoking","cpackyr","fev1_fvc_0","COPD_risk")
     
@@ -477,7 +522,7 @@ make_predictions <- function(respVar, lmfin, predictors) {
     data_pred_fin <- subset(data_pred_fin, smoking == 0)
     data_pred_fin <- subset(data_pred_fin, select = -c(smoking, cpackyr))
     
-
+    
     # adding coloumns for smoking vs. quitting scenario
     # we assume a bernulli distribution for uncertainty around probablity. SE = p (1 - p)
     data_pred_fin$COPD_risk_if_smoke <- (data_if_smoke$COPD_risk)
@@ -522,20 +567,20 @@ FEV_calculate_coefficients<- function(respVar, BINARY_CODE_DATAFRAME,FACTORS_NAM
   
   
   #-------------------------------------------#
-  #   Running the Random effects model	    #
+  #   Running the Random effects model     #
   #-------------------------------------------#
   # Note: the model is based on framingham data data_rf4 (centered/scaled, with a censoring variable)
   #Step 1: calculate stablized inverse probability weights of dropping out to the regression model;
-  tstarting_time<-ipw::tstartfun(RANDOMID, visit, data_rf4)		#Preparing the data for calculation of inverse probability weight of being censored
+  tstarting_time<-ipw::tstartfun(RANDOMID, visit, data_rf4)                         #Preparing the data for calculation of inverse probability weight of being censored
   # Calculate inverse probability weight of being censored, which is a stablized inverse probability weight
   ipw<- ipw::ipwtm(exposure = status, family = "binomial",link="logit",numerator=~1,
-              denominator=~age+agecat+sex+triglycerides+hematocrit+albumin+globulin+ALP+wine+cocktail+WBC
-              +QRS_intv+alcohol_indx+height2+broncho+dyspnea_exc+night_sym,
-              id = RANDOMID, tstart = tstarting_time, timevar = visit, type = "first",
-              data = data_rf4)
+                   denominator=~age+agecat+sex+triglycerides+hematocrit+albumin+globulin+ALP+wine+cocktail+WBC
+                   +QRS_intv+alcohol_indx+height2+broncho+dyspnea_exc+night_sym,
+                   id = RANDOMID, tstart = tstarting_time, timevar = visit, type = "first",
+                   data = data_rf4)
   
   data_rf4<-cbind.data.frame(data_rf4,ipw$ipw.weights) #add censoring variable to data
-  colnames(data_rf4)[27]<-'sw'		#change the name of the weight to "sw" - stablized weights
+  colnames(data_rf4)[27]<-'sw'                  #change the name of the weight to "sw" - stablized weights
   
   ########################################################
   #STEP1: Generate BINARY_CODE_DATAFRAME from the filename - NO, just pass BINARY_CODE_DATAFRAME to the function
@@ -561,4 +606,3 @@ FEV_calculate_coefficients<- function(respVar, BINARY_CODE_DATAFRAME,FACTORS_NAM
   
   return(final_FEV_coeff_data_frame) #return names and values of the coefficients
 }
-
