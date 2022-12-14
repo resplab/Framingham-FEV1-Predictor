@@ -9,6 +9,8 @@ library(data.table)
 library(rmarkdown) #for markdown file
 library(knitr) #for markdown file
 library(htmltools)
+library(ipw)
+library(markdown)
 
 #options(shiny.error = browser) #debug, amin
 

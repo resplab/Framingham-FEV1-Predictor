@@ -5,9 +5,9 @@ account: resplab
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7888313
-bundleId: 6634057
+bundleId: 6634085
 url: https://resplab.shinyapps.io/Lung-Function-Predictor-for-General-Population/
-when: 1670978431.30303
-lastSyncTime: 1670978431.30304
+when: 1670978940.10187
+lastSyncTime: 1670978940.10188
 asMultiple: FALSE
 asStatic: FALSE
